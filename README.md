@@ -32,7 +32,7 @@ to be added.
   Town: Los Angeles
   Type: Global
   ```
-  - Built-in ping (\#1010) and traceroute (\#5010) measurements are collected from 2016-01-18 to 2016-01-25 UTC. (done 29/01/16, resulted .json file is not included in this repository, as they are big and one can get them easily using the script fectch_res_pbid.py)
+  - Built-in ping (\#1010) and traceroute (\#5010) measurements are collected from 2016-01-18 to 2016-01-25 UTC. (done 28/01/16, resulted .json file is not included in this repository, as they are big and one can get them easily using the script fectch_res_pbid.py)
   - text file containing probe lists (pbid.txt) can be generated with following R code:
   ```R
   probes <- read.csv("probes.csv", header=T)
