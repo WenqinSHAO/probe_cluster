@@ -36,15 +36,16 @@ def main():
                 print "%d probe is selected from %s." %(min(total, limit), c_code)
                 if min(total, limit):
                     for obj in res["objects"]:
-                        pb = {}
-                        pb["id"] = obj["id"]
-                        pb["address_v4"] = obj["address_v4"]
-                        pb["prefix_v4"] = obj["prefix_v4"]
-                        pb["asn_v4"] = obj["asn_v4"]
-                        pb["latitude"] = obj["latitude"]
-                        pb["longitude"] = obj["longitude"]
-                        pb["country_code"] = c_code
-                        writer.writerow(pb)
+                        if obj["status_name"] == "Connected":
+                            pb = {}
+                            pb["id"] = obj["id"]
+                            pb["address_v4"] = obj["address_v4"]
+                            pb["prefix_v4"] = obj["prefix_v4"]
+                            pb["asn_v4"] = obj["asn_v4"]
+                            pb["latitude"] = obj["latitude"]
+                            pb["longitude"] = obj["longitude"]
+                            pb["country_code"] = c_code
+                            writer.writerow(pb)
 
 if __name__ == "__main__":
     main()
