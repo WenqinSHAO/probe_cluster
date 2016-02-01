@@ -44,11 +44,11 @@ presence of err field in the measurement results, which in most cases can not be
 #### traceroute
 A traceroute trace is composed of a series of IP-level path snapshot along the time axis.
 In following cases, we consider an IP-level path as invalid as no enough information is provided to described the path:
-1. ends with an **\***, indicating that the traceroute measurement failed to reach the destination;
-2. has too much **\***. It is important to note that Atlas allows **5** consecutive \* at most.
+- ends with an \*, indicating that the traceroute measurement failed to reach the destination;
+- has too much \*. It is important to note that Atlas allows **5** consecutive \* at most.
 Once the limit is reach, it will skip directly to the final destination and ends the measurement.
 Such measurement should be regarded as invalid.
-3. contains too much hops missing measurement values due to the presence of 'err' field.
+- contains too much hops missing measurement values due to the presence of 'err' field.
 Naturally, a traceroute record containing two much invalid IP-path snapshot is very difficult to compare with other traces.
 Therefore we remove the traces of such probes.
 ## The script
