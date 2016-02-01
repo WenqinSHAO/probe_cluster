@@ -6,11 +6,13 @@ The script *cleaning.py* does the job.
 Before looking at the code, we would like to first introduce **the criteria** considered,
 and their practical meanings.
 Then we will see how these parameters is implemented and tuned in the script.
+
 ## The idea
 The cleaning procedure applies to both ping and traceroute measurements.
 There are common causes of data incompleteness in both case.
 Yet, there are also issues that are exclusive to traceroute.
 We begin with mutual ones first.
+
 ### Unstable connection (suspect, or other unknown problems) to the Atlas platform
 If a probe is suffering from some connection issue to the Atlas platform,
 or undergoing local firmware or hardware problems, the Atlas server might not
@@ -21,6 +23,7 @@ case, i.e. time range divided by interval.
 Though the real causes behind such data incompleteness rest unknown, we believe
 that it is prudent to disregard the measurements from such probes that exposed to
 potential problems.
+
 ### Invalid measurement values.
 Apart from the inherent missing of data, there could as well be invalid values,
 that can not be treated the same way as the rest, in traces collected.
@@ -48,9 +51,10 @@ In following cases, we consider an IP-level path as invalid as no enough informa
 - has too much \*. It is important to note that Atlas allows **5** consecutive \* at most.
 Once the limit is reach, it will skip directly to the final destination and ends the measurement.
 Such measurement should be regarded as invalid.
-- contains too much hops missing measurement values due to the presence of 'err' field.
+- contains too much hops missing measurement values due to the presence of err field.
 Naturally, a traceroute record containing two much invalid IP-path snapshot is very difficult to compare with other traces.
 Therefore we remove the traces of such probes.
+
 ## The script
 The *cleaning.py* script implements the above cleaning criteria and can be used for both ping and trouceroute data. The usage is given as follows:
 ```
