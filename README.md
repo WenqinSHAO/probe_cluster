@@ -40,10 +40,11 @@ to be added.
   ```
 - clean traces to arrive at tidy datasets;
   - script and results uploaded. (done 29/01/16)
-  - TODO: add file explain cleaning criteria
+  - add file explain cleaning criteria. (done 01/02/16)
   - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
   - TODO: devise an appropriate data structure
 - exploratory analysis on feature space;
+  - RTT measurement in feature space. (mightbe begin this first)
   - for each probe traceroute trace, path length, path changes, etc. basic stats;
   - translate ip-level path to AS-level path; path length, path change, etc, stats;
   - probes set of common AS-path segments
