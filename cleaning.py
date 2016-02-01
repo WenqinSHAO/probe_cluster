@@ -7,6 +7,7 @@ import calendar
 import matplotlib.dates as mdates
 import numpy as np
 from scipy.cluster.vq import kmeans
+from itertools import groupby
 
 # script variables
 TRACE = ['t', 'T', 'trace', 'traceroute', 'path']
@@ -22,12 +23,11 @@ PING_LEN = RANGE/PING_INTV
 TRACE_LEN = RANGE/TRACE_INTV
 
 #cleaning criteria
-INTV_MX = 2 # the maxium torelable consequtive connection loss, times by interval
-LEN_P = 0.9 # the minimum length portion compared to ideal case
-INV_PING = 0.1 # the -1 value measurement shall not supass 0.1 of ideal length
-INV_PATH = 0.2 # a path is considered invalide if it INV_PATH hops are *
-INV_TRACE = 0.3 # if INV_TRACE of ideal length has invalide path, the probe is considered not exploitable
-
+INTV_MX = 2 # the maximum tolerable consecutive connection losses, times by interval.
+LEN_P = 0.9 # the minimum length portion compared to ideal case.
+INV_PING = 0.1 # the invalid value measurement shall not surpass 0.1 of ideal length.
+INV_PATH = 0.2 # an IP-path is considered invalid if it has * hops that surpass 0.2 of path's total length.
+INV_TRACE = 0.3 # if more than 0.3 of all IP-path snapshots are invalid, the entire trace is regarded as un-exploitable.
 
 def removekey(d, keys):
     r = dict(d)
@@ -130,12 +130,17 @@ def plft_stab(timestamps, max_intv, min_length):
 def interv(list):
     return np.array(list[1:]) - np.array(list[:-1])
 
+#longest platform of certain element in a list
+def pltf(list_, element_):
+    return max(sum(1 for i in g if k == element_) for k,g in groupby(list_))
 
 #check path validity
 def path_val(path, rate):
     if path[-1] == '*':
         return False
     if path.count('*') > rate * len(path):
+        return False
+    if pltf(path, '*') >= 5:
         return False
     return True
 
@@ -144,7 +149,7 @@ def main(argv):
     traceflag =False
     mode = 'avg'
     if len(argv) > 3 or len(argv) < 3:
-        print "Usage: python rtt_prep.py t/p(trace/ping) mode filename \
+        print "Usage: python cleaning.py t/p(trace/ping) mode filename \
                or python rtt_prep filename (defaut mode is avg)"
         exit()
 
@@ -170,6 +175,7 @@ def main(argv):
               "An ip-path\n" + \
               "- ends with *;\n" + \
               "- or contains more than %f *;\n" % INV_PATH + \
+              "- or contains five or more consecutive *" + \
               "is considered invalid."
         trace_dict = read_trace_raw(filename)
         min_len = LEN_P * TRACE_LEN
