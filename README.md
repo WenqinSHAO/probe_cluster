@@ -30,7 +30,7 @@ to be added.
   trace <- c(as.matrix(read.csv("trace_rm.txt", header=F)))
   all <- c(as.matrix(read.csv("pbid.txt", header=F)))
   valid <- setdiff(all, union(ping, trace))
-  write(valide, file='valid.txt',ncolumns = 1)
+  write(valid, file='valid.txt',ncolumns = 1)
   ```
   - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
   - TODO: devise an appropriate data structure
