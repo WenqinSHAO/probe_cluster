@@ -5,23 +5,23 @@ Cleaning is thus needed to remove these traces of corresponding Atlas probes.
 The script *cleaning.py* does the job.
 Before looking at the code, we would like to first introduce **the criteria** considered,
 and their practical meanings.
-Then we will see how these parameters is implemented and tuned in the script.
+Then we will see how these parameters are implemented and tuned in the script.
 
 ## The idea
 The cleaning procedure applies to both ping and traceroute measurements.
-There are common causes of data incompleteness in both case.
+There are common causes of data incompleteness for both cases.
 Yet, there are also issues that are exclusive to traceroute.
 We begin with mutual ones first.
 
-### Unstable connection (suspect, or other unknown problems) to the Atlas platform
+### Unstable connection to the Atlas platform (suspect, or other unknown problems)
 If a probe is suffering from some connection issue to the Atlas platform,
 or undergoing local firmware or hardware problems, the Atlas server might not
 receive the measurements at the scheduled interval.
-As a consequence, one witnesses unexcepted large lag between certain measurement
+As a consequence, one witnesses unexceptedly large lag between certain measurement
 timestamps and the total length of the record is relatively shorter than the ideal
 case, i.e. time range divided by interval.
 Though the real causes behind such data incompleteness rest unknown, we believe
-that it is prudent to disregard the measurements from such probes that exposed to
+that it is prudent to disregard the measurements from such probes that are exposed to
 potential problems.
 
 ### Invalid measurement values.
@@ -43,7 +43,7 @@ due to total request loss can be translated into 100% packet loss, is actually a
 However, describing the loss rate of path using a handful of ping at very coarse interval is highly
 inaccurate and thus meaningless.
 It is also worthy of noting that -1 in avg, min and max can also be caused by the
-presence of err field in the measurement results, which in most cases can not be regard as valid.
+presence of err field in the measurement results, which in most cases can not be regarded as valid.
 #### traceroute
 A traceroute trace is composed of a series of IP-level path snapshot along the time axis.
 In following cases, we consider an IP-level path as invalid as no enough information is provided to described the path:
@@ -52,6 +52,7 @@ In following cases, we consider an IP-level path as invalid as no enough informa
 Once the limit is reach, it will skip directly to the final destination and ends the measurement.
 Such measurement should be regarded as invalid.
 - contains too much hops missing measurement values due to the presence of err field.
+
 Naturally, a traceroute record containing two much invalid IP-path snapshot is very difficult to compare with other traces.
 Therefore we remove the traces of such probes.
 
