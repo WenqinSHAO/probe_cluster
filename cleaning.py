@@ -1,11 +1,10 @@
 #clean ping/traceroute traces, output probes to be removed.
-import json
+import atlasTools as at
 import os
 import sys
+import numpy as np
 import time
 import calendar
-import matplotlib.dates as mdates
-import numpy as np
 from scipy.cluster.vq import kmeans
 from itertools import groupby
 
@@ -35,88 +34,6 @@ def removekey(d, keys):
         del r[k]
     return r
 
-
-def read_rtt_raw(file):
-    at_raw = json.load(open(file, 'r'))
-    at_prob_rtt = {}
-    for mes in at_raw:
-        prob_id = mes['prb_id']
-        if prob_id not in at_prob_rtt:
-            at_prob_rtt[prob_id] = {'src_ip': mes['from'],
-                                    'time_md': [],
-                                    'avg': [],
-                                    'min':[],
-                                    'max':[],
-                                    'loss':[],
-                                    'time_epc':[]}
-        epoch_time = mes['timestamp']
-        at_prob_rtt[prob_id]['time_epc'].append(epoch_time)
-        utc_string = time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime(epoch_time))
-        mdate_time = mdates.strpdate2num('%Y-%m-%d %H:%M:%S')(utc_string)
-        at_prob_rtt[prob_id]['time_md'].append(mdate_time)
-        at_prob_rtt[prob_id]['min'].append(float(round(mes['min'])))
-        at_prob_rtt[prob_id]['avg'].append(float(round(mes['avg'])))
-        at_prob_rtt[prob_id]['max'].append(float(round(mes['max'])))
-        if mes['sent'] == 0:
-            at_prob_rtt[prob_id]['loss'].append(100)
-        else:
-            at_prob_rtt[prob_id]['loss'].append((1-float(mes['rcvd'])/mes['sent'])*100)
-    return at_prob_rtt
-
-
-def read_trace_raw(file):
-    at_raw = json.load(open(file, 'r'))
-    at_prob_rtt = {}
-    for mes in at_raw:
-        prob_id = mes['prb_id']
-        if prob_id not in at_prob_rtt:
-            at_prob_rtt[prob_id] = {'time_md':[],
-                                    'time_epc':[],
-                                    'min':[],
-                                    'avg':[],
-                                    'max':[],
-                                    'ip_path':[],
-                                    'paris_id':[]}
-        epoch_time = mes['timestamp']
-        at_prob_rtt[prob_id]['time_epc'].append(epoch_time)
-        utc_string = time.strftime('%Y-%m-%d %H:%M:%S',time.gmtime(epoch_time))
-        mdate_time = mdates.strpdate2num('%Y-%m-%d %H:%M:%S')(utc_string)
-        at_prob_rtt[prob_id]['time_md'].append(mdate_time)
-        at_prob_rtt[prob_id]['paris_id'].append(mes['paris_id'])
-        min_ = []
-        avg_ = []
-        max_ = []
-        path_ =[]
-        for hop in mes['result']:
-            res_rtt = []
-            hop_ip = ''
-            if 'result' in hop:
-                for try_ in hop['result']:
-                    if ('rtt' in try_) and ('err' not in try_):
-                        res_rtt.append(try_['rtt'])
-                        hop_ip = try_['from']
-                if res_rtt:
-                    min_.append(np.min(res_rtt))
-                    avg_.append(np.mean(res_rtt))
-                    max_.append(np.max(res_rtt))
-                    path_.append(hop_ip)
-                else:
-                    min_.append(-1)
-                    avg_.append(-1)
-                    max_.append(-1)
-                    path_.append('*')
-            else:
-                min_.append(-1)
-                avg_.append(-1)
-                max_.append(-1)
-                path_.append('*')
-        at_prob_rtt[prob_id]['min'].append(min_)
-        at_prob_rtt[prob_id]['avg'].append(avg_)
-        at_prob_rtt[prob_id]['max'].append(max_)
-        at_prob_rtt[prob_id]['ip_path'].append(path_)
-    return at_prob_rtt
-
-
 #check the connection stability to Atlas platform
 def plft_stab(timestamps, max_intv, min_length):
     if len(timestamps) < min_length:
@@ -125,7 +42,6 @@ def plft_stab(timestamps, max_intv, min_length):
     if np.max(intv) > max_intv:
         return False
     return True
-
 
 def interv(list):
     return np.array(list[1:]) - np.array(list[:-1])
@@ -165,8 +81,6 @@ def main(argv):
     if not os.path.isfile(filename):
         print "Measurement file %s doesn't exist." % filename
         exit()
-    #if '.json' not in filename:
-    #    print "Measurement file %s probably not of .json format." % filename
 
     pb_to_rm = set([])
 
@@ -177,7 +91,7 @@ def main(argv):
               "- or contains more than %f *;\n" % INV_PATH + \
               "- or contains five or more consecutive *" + \
               "is considered invalid."
-        trace_dict = read_trace_raw(filename)
+        trace_dict = at.readTraceJSON(filename)
         min_len = LEN_P * TRACE_LEN
         max_intv = INTV_MX * TRACE_INTV
         inv_len = INV_TRACE * TRACE_LEN
@@ -199,13 +113,13 @@ def main(argv):
               "- contains err field; \n" + \
               "is considered invalid."
 
-        trace_dict = read_rtt_raw(filename)
+        trace_dict = at.readPingJSON(filename)
         min_len = LEN_P * PING_LEN
         max_intv = INTV_MX * PING_INTV
         inv_len = INV_PING * PING_LEN
         val_check = mode
         fsave = 'ping_rm.txt'
-    print "Cleaning criteria:\n\
+    print "\nCleaning criteria:\n\
            Minimum length: %f,\n\
            Maximum neighbour interval: %f,\n\
            Maximum invalid values: %f." % (min_len, max_intv, inv_len)

@@ -1,5 +1,4 @@
-import requests
-requests.packages.urllib3.disable_warnings()
+import atlasTools as at
 import csv
 import os
 import sys
@@ -11,15 +10,6 @@ CC = ['BE', 'BG', 'CZ', 'DK', 'DE', 'EE', 'IE',\
 
 FILE="probes.csv" #file that save probes at its other info
 
-def query(url):
-    #params = {"key": key}
-    headers = {"Accept": "application/json"}
-    results = requests.get(url=url, headers=headers)
-    if results.status_code == 200:
-        return results.json()
-    else:
-        return False
-
 def main():
     with open(FILE, 'w') as csvfile:
         fieldnames = ['id', 'address_v4', 'prefix_v4', 'asn_v4',\
@@ -29,7 +19,7 @@ def main():
 
         for c_code in CC:
             probe_quest = "https://atlas.ripe.net/api/v1/probe/?country_code=%s&tags=system-v3,datacentre&is_public=true&status_name=Connected" % c_code
-            res = query(probe_quest)
+            res = at.query(probe_quest).json()
             if res:
                 total = res["meta"]["total_count"]
                 limit = res["meta"]["limit"]

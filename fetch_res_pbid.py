@@ -1,7 +1,5 @@
 #fetch the measurement results of ids stored in a txt file
-import json
-import requests
-requests.packages.urllib3.disable_warnings()
+import atlasTools as at
 import os
 import sys
 import time
@@ -13,15 +11,6 @@ END =  calendar.timegm(time.strptime('2016-01-25 00:00:00', '%Y-%m-%d %H:%M:%S')
 FILE = "pbid.txt"
 PING_F = 'ping_broot.json'
 TRACE_F = 'trace_broot.json'
-
-def query(url):
-    #params = {"key": key}
-    headers = {"Accept": "application/json"}
-    results = requests.get(url=url, headers=headers)
-    if results.status_code == 200:
-        return results
-    else:
-        return False
 
 def main():
     pbs=[]
@@ -37,7 +26,7 @@ def main():
     #1010 ping to b root
     url = "https://atlas.ripe.net/api/v2/measurements/1010/results?start=%d&stop=%d&probe_ids=%s&format=json" \
           % (START, END, pb_string)
-    res = query(url)
+    res = at.query(url)
     f = open(PING_F, 'w')
     f.write(res.text)
     f.close()
@@ -45,7 +34,7 @@ def main():
     #5010 ping to b root
     url = "https://atlas.ripe.net/api/v2/measurements/5010/results?start=%d&stop=%d&probe_ids=%s&format=json" \
           % (START, END, pb_string)
-    res = query(url)
+    res = at.query(url)
     f = open(TRACE_F, 'w')
     f.write(res.text)
     f.close()
