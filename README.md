@@ -4,6 +4,7 @@ to be added.
 (the detailed plan and progess will be moved to another file.)
 ## Plan and progress
 - Select probes hosted in datacentres across the europe (done, 27/01/16) (need to prove this group of probes are less impacted by local conditions);
+**NOTE: probe selection results may differ, if the script launched on different day, as the status of probes change over time.**
 - Do some simple stats on prefix, ASN, country; (done 27/01/16)
   - there are probes having no network info, say address prefix; check what happened.
   - it turns out there are abandoned and disconnected probes as well selected, seems to be an issue with the probe query API that ignores (i assume, mailed list waiting for confirmation or patches) the content of status_name field.
@@ -20,10 +21,10 @@ to be added.
   write(probes$id, "pbid.txt", ncolumns=1)
   ```
 - clean traces to arrive at tidy datasets;
-  - script and results uploaded; probes to be removed stored in *ping_rm.txt* and *trace_rm.txt*. (done 29/01/16)
+  - script and results uploaded; probes to be removed stored in *ping_rm.txt* and *trace_rm.txt* . (done 29/01/16)
   - add file explain cleaning criteria. (done 01/02/16)
   - add file *valid.txt* storing the ID of valid probes,
-  ones in *pbid.txt* subtracted by ones in *ping_rm.txt* and *trace_rm.txt*.
+  ones in *pbid.txt* subtracted by ones in *ping_rm.txt*  and *trace_rm.txt*.
   The file can be generated with following R code:
   ```R
   ping <- c(as.matrix(read.csv("ping_rm.txt", header=F)))
@@ -32,6 +33,8 @@ to be added.
   valid <- setdiff(all, union(ping, trace))
   write(valid, file='valid.txt',ncolumns = 1)
   ```
+  It is not a surprise to notice that probes in *ping_rm.txt* (33 probes) and *trace_rm.txt* (23 probes) overlap a lot,
+  19 among them are actually in common.
   - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
   - TODO: devise an appropriate data structure
 - exploratory analysis on feature space;
