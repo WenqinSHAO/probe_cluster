@@ -1,6 +1,7 @@
 # RIPE Atlas probe clustering
 ## Intro
 to be added.
+(the detailed plan and progess will be moved to another file.)
 ## Plan and progress
 - Select probes hosted in datacentres across the europe (done, 27/01/16) (need to prove this group of probes are less impacted by local conditions);
 - Do some simple stats on prefix, ASN, country; (done 27/01/16)
@@ -9,38 +10,28 @@ to be added.
   - Confirmed by Atlas staff that status_name and status fields are actually ignored. Have to clean ourselves. (done 28/01/16)
   - the bug related to status_name and status query field is now fixed by Atlas staff. (28/01/06)
 - collect ping and traceroute to one DNS root server;
-  - b root is chosen. It has only one instance, which saves us concerns on anycast.
-  ```
-  Operator: Information Sciences Institute
-  IPv4: 192.228.79.201
-  IPv6: 2001:500:84::b
-  ASN: ''
-  Homepage: http://b.root-servers.org/
-  Statistics: ''
-  Peering Policy: ''
-  Contact Email: b-poc@isi.edu
-  RSSAC: http://b.root-servers.org/rssac/
-  Identifier Naming Convention: ''
-  Instances:
-  Country: USA
-  IPv4: 'Yes'
-  IPv6: 'Yes'
-  Latitude: '34.05'
-  Longitude: '-118.25'
-  Sites: 1
-  State: California
-  Town: Los Angeles
-  Type: Global
-  ```
+  - [b root](http://b.root-servers.org/) is chosen. It has only one instance, which saves us concerns on anycast.
+  Plusm, it is on another continent across the oceans,
+  which increases the chance that the selected probes in Europe might share transatlantic links to reach the destination.  
   - Built-in ping (\#1010) and traceroute (\#5010) measurements are collected from 2016-01-18 to 2016-01-25 UTC. (done 28/01/16, resulted .json file is not included in this repository, as they are big and one can get them easily using the script fectch_res_pbid.py)
-  - text file containing probe lists (pbid.txt) can be generated with following R code:
+  - text file containing probe lists *pbid.txt* can be generated with following R code:
   ```R
   probes <- read.csv("probes.csv", header=T)
   write(probes$id, "pbid.txt", ncolumns=1)
   ```
 - clean traces to arrive at tidy datasets;
-  - script and results uploaded. (done 29/01/16)
+  - script and results uploaded; probes to be removed stored in *ping_rm.txt* and *trace_rm.txt*. (done 29/01/16)
   - add file explain cleaning criteria. (done 01/02/16)
+  - add file *valid.txt* storing the ID of valid probes,
+  ones in *pbid.txt* subtracted by ones in *ping_rm.txt* and *trace_rm.txt*.
+  The file can be generated with following R code:
+  ```R
+  ping <- c(as.matrix(read.csv("ping_rm.txt", header=F)))
+  trace <- c(as.matrix(read.csv("trace_rm.txt", header=F)))
+  all <- c(as.matrix(read.csv("pbid.txt", header=F)))
+  valid <- setdiff(all, union(ping, trace))
+  write(valide, file='valid.txt',ncolumns = 1)
+  ```
   - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
   - TODO: devise an appropriate data structure
 - exploratory analysis on feature space;
