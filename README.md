@@ -38,6 +38,8 @@ to be added.
   ```
   It is not a surprise to notice that probes in *ping_rm.txt* (35 probes) and *trace_rm.txt* (25 probes) overlap a lot,
   21 among them are actually in common. (Total selected probe number is 170.)
+  - Align ping measurements of probes in *valid.txt* with script *alignRTT.py*. (done 03/02/16)
+  - TODO: document alignment operation.
   - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
   - TODO: devise an appropriate data structure
 - exploratory analysis on feature space;
