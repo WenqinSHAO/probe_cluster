@@ -17,7 +17,7 @@ def query(url):
 
 
 def queryID(pb_id):
-    url = "https://atlas.ripe.net/api/v1/probe/?id=%d" % int(pb_id)
+    url = "https://atlas.ripe.net/api/v1/probe/?id__in=%d" % int(pb_id)
     return query(url)
 
 
