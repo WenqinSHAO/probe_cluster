@@ -4,7 +4,7 @@ to be added.
 (the detailed plan and progess will be moved to another file.)
 ## Plan and progress
 - Select probes hosted in datacentres across the europe (done, 27/01/16) (need to prove this group of probes are less impacted by local conditions);
-**NOTE: probe selection results may differ, if the script launched on different day, as the status of probes change over time.**
+**NOTE: probe selection results may differ, if the script launched on different day, as the status of probes change over time. Once probes re-selected, DO remember update pbid.txt, ping trace measurements and valid.txt.**
 - Do some simple stats on prefix, ASN, country; (done 27/01/16)
   - there are probes having no network info, say address prefix; check what happened.
   - it turns out there are abandoned and disconnected probes as well selected, seems to be an issue with the probe query API that ignores (i assume, mailed list waiting for confirmation or patches) the content of status_name field.
@@ -20,6 +20,9 @@ to be added.
   probes <- read.csv("probes.csv", header=T)
   write(probes$id, "pbid.txt", ncolumns=1)
   ```
+  - **NOTE: not all the selected probes have measurement data, as probe's current status is not
+  necessary consistent with its status is the past. An example is for a newly joined probe, it
+  may appear to be connected, but do posses any measurement data during the data collection period.**
 - clean traces to arrive at tidy datasets;
   - script and results uploaded; probes to be removed stored in *ping_rm.txt* and *trace_rm.txt* . (done 29/01/16)
   - add file explain cleaning criteria. (done 01/02/16)
@@ -33,8 +36,8 @@ to be added.
   valid <- setdiff(all, union(ping, trace))
   write(valid, file='valid.txt',ncolumns = 1)
   ```
-  It is not a surprise to notice that probes in *ping_rm.txt* (33 probes) and *trace_rm.txt* (23 probes) overlap a lot,
-  19 among them are actually in common.
+  It is not a surprise to notice that probes in *ping_rm.txt* (35 probes) and *trace_rm.txt* (25 probes) overlap a lot,
+  21 among them are actually in common. (Total selected probe number is 170.)
   - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
   - TODO: devise an appropriate data structure
 - exploratory analysis on feature space;

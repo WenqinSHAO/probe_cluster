@@ -5,12 +5,10 @@ import sys
 import numpy as np
 import time
 import calendar
-from scipy.cluster.vq import kmeans
 from itertools import groupby
 
 # script variables
 TRACE = ['t', 'T', 'trace', 'traceroute', 'path']
-MODE = ['avg', 'min', 'max']
 
 # variables describing measurement configs
 START = calendar.timegm(time.strptime('2016-01-18 00:00:00', '%Y-%m-%d %H:%M:%S'))
@@ -63,21 +61,15 @@ def path_val(path, rate):
 
 def main(argv):
     traceflag =False
-    mode = 'avg'
-    if len(argv) > 3 or len(argv) < 3:
-        print "Usage: python cleaning.py t/p(trace/ping) mode filename \
-               or python rtt_prep filename (defaut mode is avg)"
+    if len(argv) != 2:
+        print "Usage: python cleaning.py t/p(trace/ping) filename"
         exit()
 
     trace = argv[0]
     if trace in TRACE:
         traceflag = True
-    mode = argv[1]
-    if mode not in MODE:
-        print "mode %s not recognized, set to default mode 'avg', \
-               all possible modes are %s" % (mode, MODE)
-        mode = 'avg'
-    filename = argv[2]
+
+    filename = argv[1]
     if not os.path.isfile(filename):
         print "Measurement file %s doesn't exist." % filename
         exit()
@@ -117,7 +109,7 @@ def main(argv):
         min_len = LEN_P * PING_LEN
         max_intv = INTV_MX * PING_INTV
         inv_len = INV_PING * PING_LEN
-        val_check = mode
+        val_check = 'avg'
         fsave = 'ping_rm.txt'
     print "\nCleaning criteria:\n\
            Minimum length: %f,\n\
@@ -149,24 +141,6 @@ def main(argv):
     for pb in list(pb_to_rm):
         f.write("%d\n" % pb)
     f.close()
-
-    #Quantify measurment dis-sync in time with k-means
-    len_sort = sorted(clean_trace.items(), key=lambda s:len(s[1]['time_epc']), reverse=True)
-    max_len_pb = len_sort[0][0]
-    max_length = len(len_sort[0][1]['time_epc'])
-    all_time_epc = []
-    for pb in clean_trace:
-        for t in clean_trace[pb]['time_epc']:
-            all_time_epc.append(t)
-    all_time_epc = np.array(all_time_epc).astype(float).reshape(len(all_time_epc),1)
-    book = np.array(clean_trace[max_len_pb]['time_epc']).astype(float).reshape(max_length,1)
-    t_centroids, dist = kmeans(all_time_epc, book)
-    t_centroids = sorted(t_centroids)
-    cent_intv = interv(t_centroids)
-    print "In average measurements are dis-synchronized by %.3fsec." % dist
-    print "Aligned timestamps have:\n\
-           mean interval of %.3fsec;\n\
-           interval std of %.3fsec." % (np.mean(cent_intv), np.std(cent_intv))
 
 if __name__ == "__main__":
     main(sys.argv[1:])

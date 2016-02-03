@@ -78,7 +78,8 @@ Traceroute trace.
 An ip-path
 - ends with *;
 - or contains more than 0.200000 *;
-- or contains five or more consequtive *is considered invalid.
+- or contains five or more consecutive *is considered invalid.
+
 Cleaning criteria:
            Minimum length: 302.400000,
            Maximum neighbour interval: 3600.000000,
@@ -94,24 +95,21 @@ ID           Len. Max. Intv   # Invd.
   16530       334      5402         0
   22958       321     28800         0
   13124       335      3602         2
-  22898       322     27000         0
+  24562        78      1803         0
   13870       333      5398         0
   24891       336      1803       336
   21956       334      5401         0
   10824       336      1803       336
   20052       335      3603         0
   21333       335      3602         4
+  19682       210      1803         1
   21349       312     44998         0
+  15594       169      1803         0
   16876       336      1804       336
-  24562        78      1803         0
+  22898       322     27000         0
   20468       335      3603         0
   16757       115      1803         0
   17270       335      3602         0
   21588       334      5402         2
-165 probes in all, 142 probes after cleaning
-In average measurements are dis-synchronized by 430.279sec.
-Aligned timestamps have:
-           mean interval of 1800.025sec;
-           interval std of 14.671sec.
-
+167 probes in all, 142 probes after cleaning
 ```
