@@ -3,10 +3,13 @@ import atlasTools as at
 from scipy.cluster.vq import kmeans
 import numpy as np
 import sys
+import time
 
 PING_F = 'ping_broot.json'
 VALID_ID = 'valid.txt'
 MODE = ['avg', 'min', 'max']
+
+PING_INTV = 240
 
 def read_pdid(file):
     pb_list = []
@@ -56,8 +59,10 @@ def main(argv):
     book = np.array(clean_trace[max_len_pb]['time_epc']).astype(float).reshape(max_length,1)
     alTP, dist = kmeans(all_time_epc, book)
     alTP = sorted(alTP)
+    alTP = [i[0] for i in alTP]
     tpIntv = interv(alTP)
-    print "In average measurements are dis-synchronized by %.3fsec." % dist
+    #print "In average measurements are dis-synchronized by %.3fsec." % dist
+    print "Calculating 'aligned' timestamps that minimize time distortion after alignment"
     print "Aligned timestamps have:\n\
            - mean interval of %.3fsec;\n\
            - interval std of %.3fsec." % (np.mean(tpIntv), np.std(tpIntv))
@@ -65,18 +70,47 @@ def main(argv):
 
     filename = 'pingAL_'+mode+'.csv'
     f = open(filename, 'w')
-    line = 'id,' + ','.join(['%d'%t for t in alTP]) + '\n'
+    line = 'id,' + ','.join(['%d'%round(t) for t in alTP]) + '\n'
     f.write(line)
 
+    mean_time_dist = 0
     for pb in clean_trace:
         align = np.zeros(max_length) # max_length equals the length of alTP
+
+    #    for i in range(len(clean_trace[pb]['time_epc'])):
+    #        distance = []
+    #        for c in alTP:
+    #            distance.append(np.linalg.norm(c - clean_trace[pb]['time_epc'][i]))
+    #        lb = np.argmin(distance)
+    #        # assign RTT measuremrnt to the cloest aligend timestamp
+    #        align[lb] = clean_trace[pb][mode][i]
+
+    # it actually sounds like Dynamic Time Wrapping...
+
+        last_match = 0
+        time_dis = []
         for i in range(len(clean_trace[pb]['time_epc'])):
-            distance = []
-            for c in alTP:
-                distance.append(np.linalg.norm(c - clean_trace[pb]['time_epc'][i]))
-            lb = np.argmin(distance)
-            # assign RTT measuremrnt to the cloest aligend timestamp
-            align[lb] = clean_trace[pb][mode][i]
+            last_dist = 10e6
+            last_pose = -1
+            for j in range(last_match, max_length, 1): # begin the search from last matched value
+                distance = abs(alTP[j] - clean_trace[pb]['time_epc'][i])
+                if distance < last_dist: # if the distance is deacreasing, continue
+                    last_dist = distance
+                    last_pose = j
+                else: # if otherwise, last searched al timestamp must be the closest
+                    break
+
+            align[last_pose] = clean_trace[pb][mode][i] # assigne the measurment to the aligend postion
+            last_match = last_pose # update last match position
+            time_dis.append(last_dist)
+            if last_match == (max_length - 1):
+                # if already at the end of aligned ts, stop the procedure, even if there are still values left
+                break
+
+        clean_trace[pb]['time_dis'] = time_dis
+        print "Probe %d, time dist: avg. %8.3f, max. %8.3f at %d" % (pb, np.mean(time_dis), np.max(time_dis), np.argmax(time_dis))
+        mean_time_dist += np.mean(time_dis)
+
         # in case 0 or -1 align list,
         # assigne the cloest (in time both direction) valide value
         for i in range(max_length):
@@ -107,6 +141,7 @@ def main(argv):
         f.write(line)
 
     f.close()
+    print "mean time dist of all probes: %.3f" % (float(mean_time_dist)/len(clean_trace))
 
 if __name__ == "__main__":
     main(sys.argv[1:])
