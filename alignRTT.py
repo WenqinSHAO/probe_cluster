@@ -114,7 +114,8 @@ def main(argv):
         # in case 0 or -1 align list,
         # assigne the cloest (in time both direction) valide value
         for i in range(max_length):
-            if align[i] == 0 or align[i] == -1:
+            #if align[i] == 0 or align[i] == -1:
+            if align[i] <= 0:
                 left_candi = -1
                 right_candi = -1
                 for j in range(1,5,1): # neighbour search range
