@@ -73,4 +73,4 @@ for (i in c(1:(length(bins)-1))){
 }
 
 # save ft dataframe for furhter uses
-save(pbFT, file='features,Rda')
+save(pbFT, file='features.Rda')
