@@ -42,6 +42,7 @@ to be added.
   - document alignment operation and how we handle invalid values (done 07/02/16)
   - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
   - TODO: devise an appropriate data structure
+  - TODO: put all global variables, such measurement time range, in one file
 - exploratory analysis on feature space;
   - RTT measurement in feature space. (mightbe begin this first)
   - for each probe traceroute trace, path length, path changes, etc. basic stats;

@@ -20,10 +20,10 @@ The mean time displacement of all measurements is 55.01 sec, much smaller than t
 
 ##Handling invalid values
 There are two type of invalid values.
-One is the holes results by alignment, as not all the traces are as as the longest one.
+One is the holes results by alignment, as not all the traces are as long as the longest one.
 Second is invalid values mentioned in *cleaning.md*, caused by timeout, system error etc.
 These cases might take actual values in implementation, such as 0 for holes and -1 for timeouts, or NA for all cases.
 Such values can be easily disregarded when calculating certain statistic measures, such as mean, std, etc.
 However, the existence of such values can be problematic when describing or comparing measurement in time series form.
 Since traces have already been cleaned, such cases are pretty rare in this final stage of processing, we decided to replace these invalid values with valid ones and still very limited impact can be expected.
-Assuming that RTT measurement values have temporal locality, i.e. measurements effected close in time shall have little difference, we assign timestamps with invalid values with valid ones that is the closest (consider both directions) in time. 
+Assuming that RTT measurement values have temporal locality, i.e. measurements effected close in time shall have little difference, we assign timestamps with invalid values with valid ones that is the closest (consider both directions) in time.
