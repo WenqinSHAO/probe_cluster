@@ -44,7 +44,11 @@ to be added.
   - TODO: devise an appropriate data structure
   - TODO: put all global variables, such measurement time range, in one file
 - exploratory analysis on feature space;
-  - RTT measurement in feature space. (mightbe begin this first)
+  - RTT measurement in feature space.
+      - In progress: compare fft and psd as feature
+      - TODO: document the tests so far perform in choosing features
+      - TODO: perform ANOVA on features across clusters, quantify the importance of features
+      - TODO: design new features with Changepoint analysis
   - for each probe traceroute trace, path length, path changes, etc. basic stats;
   - translate ip-level path to AS-level path; path length, path change, etc, stats;
   - probes set of common AS-path segments
