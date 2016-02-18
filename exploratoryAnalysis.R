@@ -3,6 +3,8 @@ library(moments)
 library(changepoint)
 library(pracma)
 library(psd)
+library(ggplot2)
+library(clValid)
 
 
 ### functions
@@ -101,9 +103,12 @@ pbFT$MeanVarCpts <- as.numeric(unlist(lapply(MeanVarCpts, ncpts)))
 pbFT$smpen <- apply(pbRTT$ts, 1, sample_entropy)
 
 # power spectum density
-bins <- c(0, 1/4, 1/2)
+bins <- c(0, 1/6, 1/2)
 powerSpecPSD <- apply(pbRTT$ts, 1, function(x) powBinPSD(x, bins))
 powerSpecFFT <-apply(pbRTT$ts, 1, function(x) powBinFFT(x, bins))
+
+char.ft <- c('id', 'range', 'mode', 'mean', 'std', 'skewness', 'kurtosis', 'MeanCpts', 'MeanVarCpts', 'smpen')
+pbFT <- pbFT[, char.ft]
 
 pbFT_psd <- pbFT
 pbFT_fft <- pbFT
@@ -132,6 +137,53 @@ for (spec in variable.names(diff_PSD_FFT)){
 mtext('Difference between PSD and FFT', side = 1, outer = T)
 dev.off()
 
+
+# calc scaled ft for each feature space
+scale.both <- scale(pbFT[, !(variable.names(pbFT) %in% c("id", "cls")), drop=F])
+pca.both <- princomp(scale.both)
+
+scale.psd <- scale(pbFT_psd[, !(variable.names(pbFT_psd) %in% c("id", "cls")), drop=F])
+pca.psd <- princomp(scale.psd)
+
+scale.fft <- scale(pbFT_fft[, !(variable.names(pbFT_fft) %in% c("id", "cls")), drop=F])
+pca.fft <- princomp(scale.fft)
+
+
+# compareing clustering settings with internal validation metrics
+intval.both <- clValid(scale.both, 2:20, clMethods = c("hierarchical", "kmeans", "pam"), validation = "internal", method = "ward")
+intval.psd <- clValid(scale.psd, 2:20, clMethods = c("hierarchical", "kmeans", "pam"), validation = "internal", method = "ward")
+intval.fft <- clValid(scale.fft, 2:20, clMethods = c("hierarchical", "kmeans", "pam"), validation = "internal", method = "ward")
+
+pdf('both_intval.pdf', width=6, height = 4)
+plot(intval.both, main='')
+dev.off()
+
+pdf('psd_intval.pdf', width=6, height = 4)
+plot(intval.psd, main='')
+dev.off()
+
+pdf('fft_intval.pdf', width=6, height = 4)
+plot(intval.fft, main='')
+dev.off()
+
+
+# comparing clustering setting with stability metrics
+stab.both <- clValid(scale.both, 2:20, clMethods = c("hierarchical", "kmeans", "pam"), validation = "stability", method = "ward")
+stab.psd <- clValid(scale.psd, 2:20, clMethods = c("hierarchical", "kmeans", "pam"), validation = "stability", method = "ward")
+stab.fft <- clValid(scale.fft, 2:20, clMethods = c("hierarchical", "kmeans", "pam"), validation = "stability", method = "ward")
+
+pdf('both_stab.pdf', width=6, height = 4)
+plot(stab.both, main='')
+dev.off()
+
+pdf('psd_stab.pdf', width=6, height = 4)
+plot(stab.psd, main='')
+dev.off()
+
+pdf('fft_stab.pdf', width=6, height = 4)
+plot(stab.fft, main='')
+dev.off()
+
 # clustering analysis
 pbFT$cls <- NULL
 pbFT_psd$cls <- NULL
@@ -139,6 +191,50 @@ pbFT_fft$cls <- NULL
 pbFT$cls <- clsAlyz(pbRTT$ts, pbFT[, variable.names(pbFT)!="id"], 2, "both")
 pbFT_fft$cls <- clsAlyz(pbRTT$ts, pbFT_fft[, variable.names(pbFT_fft)!="id"], 2, "fft")
 pbFT_psd$cls <- clsAlyz(pbRTT$ts, pbFT_psd[, variable.names(pbFT_psd)!="id"], 2, "psd")
+#pbFT_psd$cls <- clsAlyz(pbRTT$ts, pbFT_psd[, variable.names(pbFT_psd)!="id"], 7, "psd7")
 
+# compare clusters
+table(pbFT$cls, pbFT_psd$cls)
+table(pbFT$cls, pbFT_fft$cls)
+table(pbFT_psd$cls, pbFT_fft$cls)
 
+# plot clusters on PCA surfaces containing both fft and psd features
+pdf('psd_bothPCA.pdf', width = 6, height = 6)
+g <- ggbiplot(pca.both, groups = pbFT_psd$cls, ellipse = T, var.axes = T, scale = 0)
+g <- g + theme(legend.direction = "horizontal", legend.position = "top", text=element_text(size=14))
+print(g)
+dev.off()
 
+pdf('fft_bothPCA.pdf', width = 6, height = 6)
+g <- ggbiplot(pca.both, groups = pbFT_fft$cls, ellipse = T, var.axes = T, scale = 0)
+g <- g + theme(legend.direction = "horizontal", legend.position = "top", text=element_text(size=14))
+print(g)
+dev.off()
+
+# hist diff of psd and fft grouped by clusters
+pdf('both_SpecDiff.pdf', width=4, height=6)
+g <- ggplot(diff_PSD_FFT, aes(x=Spec1, fill=pbFT$cls))
+g <- g + geom_histogram(binwidth=0.02, alpha=.4, position = 'identity')
+g <- g + theme(legend.direction = "horizontal", legend.position = "top")
+g <- g + scale_fill_discrete(name="Cluster PSD+FFT")
+g <- g + theme(text=element_text(size=14))
+print(g)
+dev.off()
+
+pdf('psd_SpecDiff.pdf', width=4, height=6)
+g <- ggplot(diff_PSD_FFT, aes(x=Spec1, fill=pbFT_psd$cls))
+g <- g + geom_histogram(binwidth=0.02, alpha=.4, position = 'identity')
+g <- g + theme(legend.direction = "horizontal", legend.position = "top")
+g <- g + scale_fill_discrete(name="Cluster PSD")
+g <- g + theme(text=element_text(size=14))
+print(g)
+dev.off()
+
+pdf('fft_SpecDiff.pdf', width=4, height=6)
+g <- ggplot(diff_PSD_FFT, aes(x=Spec1, fill=pbFT_fft$cls))
+g <- g + geom_histogram(binwidth=0.02, alpha=.4, position = 'identity')
+g <- g + theme(legend.direction = "horizontal", legend.position = "top")
+g <- g + scale_fill_discrete(name="Cluster PSD")
+g <- g + theme(text=element_text(size=14))
+print(g)
+dev.off()
