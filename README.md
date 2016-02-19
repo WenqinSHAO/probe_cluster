@@ -45,10 +45,13 @@ to be added.
   - TODO: put all global variables, such measurement time range, in one file
 - exploratory analysis on feature space;
   - RTT measurement in feature space.
-      - In progress: compare fft and psd as feature
+      - Compared different ways estimating PSD (done 18/02/16)
+      - Add features based on CPA (done 12/02/16)
+      - Adapt CPA calculation for RTT (done 19/02/16)
+      - ANOVA test on feature (18/02/16)
       - TODO: document the tests so far perform in choosing features
-      - TODO: perform ANOVA on features across clusters, quantify the importance of features
-      - TODO: design new features with Changepoint analysis
+  - Clustering in time-series data representation
+      - Device new data representation based on CPA (done 19/02/16)  
   - for each probe traceroute trace, path length, path changes, etc. basic stats;
   - translate ip-level path to AS-level path; path length, path change, etc, stats;
   - probes set of common AS-path segments
