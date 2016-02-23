@@ -36,8 +36,6 @@
   21 among them are actually in common. (Total selected probe number is 170.)
   - Align ping measurements of probes in *valid.txt* with script *alignRTT.py*. (done 03/02/16)
   - document alignment operation and how we handle invalid values (done 07/02/16)
-  - TODO: combine cleaning results of ping and traceroute, dis-sync timestamps
-  - TODO: devise an appropriate data structure
   - Put all global variables, such measurement time range, in one file (done 23/02/16)
 - exploratory analysis on feature space;
   - RTT measurement in feature space.
@@ -45,11 +43,10 @@
       - Add features based on CPA (done 12/02/16)
       - Adapt CPA calculation for RTT (done 19/02/16)
       - ANOVA test on feature (18/02/16)
+      - TODO: traceroute statistics
+      - TODO: compare changepoints to traceroute path changes
       - TODO: document the tests so far perform in choosing features
   - Clustering in time-series data representation
-      - Device new data representation based on CPA (done 19/02/16)  
-  - for each probe traceroute trace, path length, path changes, etc. basic stats;
-  - translate ip-level path to AS-level path; path length, path change, etc, stats;
-  - probes set of common AS-path segments
-  - probe groups of similar variations in time
-  - compare groups
+      - Device new data representation based on CPA (done 19/02/16)
+      - TODO: cross clustering results and traceroute
+      - TODO: review the pathology biblio
