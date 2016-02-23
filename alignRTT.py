@@ -4,9 +4,9 @@ from scipy.cluster.vq import kmeans
 import numpy as np
 import sys
 import time
+from globalConfig import *
 
-PING_F = 'ping_broot.json'
-VALID_ID = 'valid.txt'
+
 MODE = ['avg', 'min', 'max']
 
 PING_INTV = 240
@@ -37,8 +37,8 @@ def main(argv):
                all possible modes are %s" % (mode, MODE)
         mode = 'avg'
 
-    valid_id = read_pdid(VALID_ID)
-    alltrace = at.readPingJSON(PING_F)
+    valid_id = read_pdid(PROBE_ID_VALID_FILE)
+    alltrace = at.readPingJSON(MES_PING_FILE)
     pbAct = alltrace.keys()
     pbVal =  list(set(valid_id) & set(pbAct))
     clean_trace = {k: alltrace[k] for k in pbVal}

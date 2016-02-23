@@ -2,16 +2,16 @@ import atlasTools as at
 import csv
 import os
 import sys
+from globalConfig import *
+
 
 CC = ['BE', 'BG', 'CZ', 'DK', 'DE', 'EE', 'IE',\
       'EL', 'ES', 'FR', 'HR', 'IT', 'CY', 'LV', \
       'PT', 'RO', 'SI', 'SK', 'FI', 'SE', 'UK']
 # eurpean country code
 
-FILE="probes.csv" #file that save probes at its other info
-
 def main():
-    with open(FILE, 'w') as csvfile:
+    with open(PROBE_META_FILE, 'w') as csvfile:
         fieldnames = ['id', 'address_v4', 'prefix_v4', 'asn_v4',\
                      'latitude', 'longitude', 'country_code']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)

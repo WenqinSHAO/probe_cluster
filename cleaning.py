@@ -6,18 +6,10 @@ import numpy as np
 import time
 import calendar
 from itertools import groupby
+from globalConfig import *
 
 # script variables
 TRACE = ['t', 'T', 'trace', 'traceroute', 'path']
-
-# variables describing measurement configs
-START = calendar.timegm(time.strptime('2016-01-18 00:00:00', '%Y-%m-%d %H:%M:%S'))
-END = calendar.timegm(time.strptime('2016-01-25 00:00:00', '%Y-%m-%d %H:%M:%S'))
-RANGE = END-START
-PING_INTV = 240
-TRACE_INTV = 1800
-PING_LEN = RANGE/PING_INTV
-TRACE_LEN = RANGE/TRACE_INTV
 
 #cleaning criteria
 INTV_MX = 2 # the maximum tolerable consecutive connection losses, times by interval.
@@ -87,7 +79,8 @@ def main(argv):
         min_len = LEN_P * TRACE_LEN
         max_intv = INTV_MX * TRACE_INTV
         inv_len = INV_TRACE * TRACE_LEN
-        fsave = 'trace_rm.txt'
+        #fsave = 'trace_rm.txt'
+        fsave = PROBE_ID_TRACE_RM_FILE
         for pbid in trace_dict:
             path_val_flag = []
             for p in trace_dict[pbid]['ip_path']:
@@ -110,7 +103,8 @@ def main(argv):
         max_intv = INTV_MX * PING_INTV
         inv_len = INV_PING * PING_LEN
         val_check = 'avg'
-        fsave = 'ping_rm.txt'
+        #fsave = 'ping_rm.txt'
+        fsave = PROBE_ID_PING_RM_FILE
     print "\nCleaning criteria:\n\
            Minimum length: %f,\n\
            Maximum neighbour interval: %f,\n\
