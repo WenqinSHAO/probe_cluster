@@ -71,9 +71,62 @@ INV_PATH = 0.2 # an IP-path is considered invalid if it has * hops that surpass 
 INV_TRACE = 0.3 # if more than 0.3 of all IP-path snapshots are invalid, the entire trace is regarded as un-exploitable.
 ```
 Each time the script is run, the exact cleaning criteria applied to the data is as well printed on the screen.
-An example output, using above configuration on the measurements concerned in this work is given below.
+## Cleaning summary
+### Ping measurement
 ```
-$ python cleaning.py t trace_broot.json
+Ping trace
+An RTT measurement
+- equals -1;
+- missing value;
+- contains err field;
+is considered invalid.
+
+Cleaning criteria:
+           Minimum length: 2268.000000,
+           Maximum neighbour interval: 480.000000,
+           Maximum invalid values: 252.000000.
+
+Probes to be removed:
+ID           Len. Max. Intv   # Invd.
+  18945      2517       960         3
+  23812      2503      4321         2
+  20487      1992       479         1
+  20745      2510      1442         0
+  20874      2510      2640         3
+  17931      2519       481         1
+  10638      2517       960         6
+  21391      2517       960         1
+  22545      2517       960         2
+  16530      2502      4558         1
+  22958      2408     27122         0
+  21956      2510      2639         3
+  21283      2517       960         2
+  20644      2517       961         1
+  24562       587       243         0
+  13870      2506      3120         0
+  25263      2519       483         1
+  10806      2512      2401         0
+  20673      2511      2400         0
+  13124      2518       721         0
+  11598      2517       966         0
+  20052      2517       957         1
+  21333      2517       960         6
+  22487      2518       720         2
+  24415      2516      1199         1
+  19682      1573       244         0
+  21349      2343     42719         0
+  15594      1266       244         1
+  10604      2518       721         1
+  22898      2411     26401         2
+  13939      2517       959         0
+  20468      2518       722         1
+  16757       865       243         0
+  17270      2517       959         5
+  21588      2510      2642         1
+```
+
+### Traceroute measurement
+```
 Traceroute trace.
 An ip-path
 - ends with *;

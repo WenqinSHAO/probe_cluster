@@ -81,6 +81,7 @@ def main(argv):
         inv_len = INV_TRACE * TRACE_LEN
         #fsave = 'trace_rm.txt'
         fsave = PROBE_ID_TRACE_RM_FILE
+        fval = PROBE_ID_TRACE_VAL_FILE
         for pbid in trace_dict:
             path_val_flag = []
             for p in trace_dict[pbid]['ip_path']:
@@ -105,6 +106,8 @@ def main(argv):
         val_check = 'avg'
         #fsave = 'ping_rm.txt'
         fsave = PROBE_ID_PING_RM_FILE
+        fval = PROBE_ID_PING_VAL_FILE
+
     print "\nCleaning criteria:\n\
            Minimum length: %f,\n\
            Maximum neighbour interval: %f,\n\
@@ -133,6 +136,11 @@ def main(argv):
 
     f = open(fsave, 'w')
     for pb in list(pb_to_rm):
+        f.write("%d\n" % pb)
+    f.close()
+
+    f = open(fval, 'w')
+    for pb in clean_trace:
         f.write("%d\n" % pb)
     f.close()
 

@@ -21,19 +21,21 @@
   may appear to be connected, but do posses any measurement data during the data collection period.**
 - clean traces to arrive at tidy datasets;
   - script and results uploaded; probes to be removed stored in *ping_rm.txt* and *trace_rm.txt* . (done 29/01/16)
+  - Considering the note right above, valid probes with actual measurement traces are separately stored in *ping_val.txt* and *trace_val.txt* . (done 25/02/16)
   - add file explain cleaning criteria. (done 01/02/16)
   - add file *valid.txt* storing the ID of valid probes,
-  ones in *pbid.txt* subtracted by ones in *ping_rm.txt*  and *trace_rm.txt*.
+  ~~ones in *pbid.txt* subtracted by ones in *ping_rm.txt*  and *trace_rm.txt*.~~
+  being intersection of IDs in *ping_val.txt* and *trace_val.txt*.
   The file can be generated with following R code:
   ```R
-  ping <- c(as.matrix(read.csv("ping_rm.txt", header=F)))
-  trace <- c(as.matrix(read.csv("trace_rm.txt", header=F)))
-  all <- c(as.matrix(read.csv("pbid.txt", header=F)))
-  valid <- setdiff(all, union(ping, trace))
+  ping <- c(as.matrix(read.csv("ping_val.txt", header=F)))
+  trace <- c(as.matrix(read.csv("trace_val.txt", header=F)))
+  valid <- intersect(ping, trace)
   write(valid, file='valid.txt',ncolumns = 1)
   ```
   It is not a surprise to notice that probes in *ping_rm.txt* (35 probes) and *trace_rm.txt* (25 probes) overlap a lot,
   21 among them are actually in common. (Total selected probe number is 170.)
+  128 probes with valid measurement records remain.
   - Align ping measurements of probes in *valid.txt* with script *alignRTT.py*. (done 03/02/16)
   - document alignment operation and how we handle invalid values (done 07/02/16)
   - Put all global variables, such measurement time range, in one file (done 23/02/16)
@@ -42,8 +44,14 @@
       - Compared different ways estimating PSD (done 18/02/16)
       - Add features based on CPA (done 12/02/16)
       - Adapt CPA calculation for RTT (done 19/02/16)
-      - ANOVA test on feature (18/02/16)
-      - TODO: traceroute statistics
+      - ANOVA test on feature (done 18/02/16)
+      - Translate IP to ASN (done 25/02/16)
+      ```
+      1144 entries in all.
+           57 of them are private address.
+           50 don't have resolution results.
+           228 unique ASN appeared.
+      ```
       - TODO: compare changepoints to traceroute path changes
       - TODO: document the tests so far perform in choosing features
   - Clustering in time-series data representation
