@@ -45,13 +45,31 @@
       - Add features based on CPA (done 12/02/16)
       - Adapt CPA calculation for RTT (done 19/02/16)
       - ANOVA test on feature (done 18/02/16)
-      - Translate IP to ASN (done 25/02/16)
+      - Translate IP to ASN, tried both Cymru and ARIN source. (done 25/02/16)
       ```
+      Cymru
       1144 entries in all.
            57 of them are private address.
            50 don't have resolution results.
-           228 unique ASN appeared.
+           225 unique ASN appeared.
+      ARIN
+      1144 entries in all.
+           57 of them are private address.
+           322 don't have resolution results.
+           225 unique ASN appeared.
       ```
+      - IP to ASN resolution results are compared and merged. (done 25/02/16)
+      ```
+      Both hit 802
+	         same 794
+	         diff 8
+      Both miss 30
+      Cymru single hit 292
+      ARIN single hit 20
+      ```
+      For 8 IP addresses that resolution results that differ, I manually cross check with [hurricane](http://bgp.he.net/ip).
+      The results from [hurricane](http://bgp.he.net/ip) and Cymru agree with each other.
+      Therefore, the dictionary merge bases on the Cymru one, only ARIN single hit is added.
       - TODO: compare changepoints to traceroute path changes
       - TODO: document the tests so far perform in choosing features
   - Clustering in time-series data representation

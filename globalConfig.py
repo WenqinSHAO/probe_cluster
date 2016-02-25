@@ -23,3 +23,5 @@ MES_PING_FILE = 'ping_broot.json' # raw measurement data for ping
 MES_TRACE_FILE = 'trace_broot.json' # raw data for traceroute
 
 DIC_IP_2_ASN = 'dic_ip2asn.csv'
+DIC_IP_2_ASN_ARIN = 'dic_ip2asn_arin.csv'
+DIC_IP_2_ASN_MERG = 'dic_ip2asn_merg.csv'
