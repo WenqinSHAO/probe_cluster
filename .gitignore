@@ -83,3 +83,4 @@ vignettes/*.pdf
 .httr-oauth
 Status API Training Shop Blog About Pricing
 
+.DS_Store
