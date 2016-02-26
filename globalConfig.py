@@ -22,6 +22,12 @@ PROBE_ID_VALID_FILE = "valid.txt" # the intersection of the above two files
 MES_PING_FILE = 'ping_broot.json' # raw measurement data for ping
 MES_TRACE_FILE = 'trace_broot.json' # raw data for traceroute
 
-DIC_IP_2_ASN = 'dic_ip2asn.csv'
-DIC_IP_2_ASN_ARIN = 'dic_ip2asn_arin.csv'
-DIC_IP_2_ASN_MERG = 'dic_ip2asn_merg.csv'
+DIC_IP_2_ASN = 'dic_ip2asn.csv' # Cymru
+DIC_IP_2_ASN_ARIN = 'dic_ip2asn_arin.csv' # ARIN
+DIC_IP_2_ASN_MERG = 'dic_ip2asn_merg.csv' # MERGE
+
+STAT_IP_PATH = 'stat_ip_path.json'
+STAT_AS_PATH_CY = 'stat_as_path_cy.json'
+STAT_AS_PATH_MG = 'stat_as_path_mg.json'
+
+TRACE_TIME_STAMP = 'trace_tsmp.json'

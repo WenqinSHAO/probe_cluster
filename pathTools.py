@@ -5,6 +5,8 @@ import sys
 #reload(sys)
 #sys.setdefaultencoding('utf8')
 from collections import Counter
+import ipaddress
+import editdistance as ed
 
 def ip2asARIN(ip):
     asinfo = {}
@@ -43,6 +45,15 @@ def ip2asCYMRU(ip):
                 asinfo['as_name'] = cols[2].strip()
     return asinfo
 
+def asnLookup(asn):
+    answer = ''
+    cmdCym = "whois -h whois.cymru.com "
+    quest = cmdCym + "''" + 'AS' + str(asn) + "''"
+    res = os.popen(quest)
+    for line in res:
+        if "AS Name" not in line:
+            answer += line
+    return answer
 
 def loadIPDict(file):
     ipDict = {}
@@ -72,12 +83,21 @@ def rmPriva(path):
         else:
             break
     return path
+
 # if before and after an unknown ip-asn mapping, the ASNs are the same
-# the unknown ASN should be same as well
-def guessUnknown(path):
+# the unknown ASN should be the same as well
+def fillHole(path):
+    maxHoleSize = 5
+    # the begining and the end shall not count
     for i in range(1, (len(path)-1)):
-        if path[i] == -2 or path[i] == -3:
-            if path[i-1] == path[i+1]:
+        # a hole must have a left edge
+        if path[i] < 0 and path[i-1] > 0:
+            # find the right edge of the hole within maxsize limit
+            for j in range(1,maxHoleSize):
+                if path[i+j] > 0:
+                    break
+            # if the two sides are the same, then fill the hole
+            if path[i-1] == path[i+j]:
                 path[i] = path[i-1]
     return path
 
@@ -94,12 +114,117 @@ def ip2asPath(path, ipDict):
             as_path.append(-3)
 
     as_path = rmPriva(as_path)
-    as_path = guessUnknown(as_path)
+    as_path = asPathFormatter(as_path)
+    as_path = fillHole(as_path)
     as_path = asPathFormatter(as_path)
 
+    return as_path
+
+def ip2asPathRAW(path, ipDict):
+    as_path = []
+    for hop in path:
+        if hop != '*':
+            if hop in ipDict:
+                as_path.append(ipDict[hop]['asn'])
+            else:
+                print "Wierd missing in dict %s" % hop
+                as_path.append(-2)
+        else:
+            as_path.append(-3)
     return as_path
 
 def loopCheck(path):
     loopAS = [k for (k,v) in Counter(path).iteritems() if v > 1]
     loopAS = [k for k in loopAS if k != -2 and k!= -3]
     return loopAS
+
+def locPrivaIP(path):
+    return {saut: path.index(saut) for saut in path if saut!='*' and ipaddress.ip_address(saut).is_private}
+
+def locStarIP(path):
+    return {saut: path.index(saut) for saut in path if saut == '*'}
+
+def locPrivaAS(path):
+    return {saut: path.index(saut) for saut in path if saut == -1}
+
+def locUnkAS(path):
+    return {saut: path.index(saut) for saut in path if saut == -2}
+
+def locStarAS(path):
+    return {saut: path.index(saut) for saut in path if saut == -3}
+
+def locdiffPos(path1, path2):
+    for i in range(min(len(path1), len(path2))):
+        if path1[i] != path2[i]:
+            break
+    return i
+
+def asPathStatDict():
+    return {'length':[],
+            'countPriva':[],
+            'posPriva':[],
+            'countUnkown':[],
+            'posUnknown':[],
+            'countStar':[],
+            'posStar':[],
+            'disChange':[],
+            'posChange':[]}
+def ipPathStatDict():
+    return {'length':[],
+            'countPriva':[],
+            'posPriva':[],
+            'countStar':[],
+            'posStar':[],
+            'disChange':[],
+            'posChange':[]}
+
+def updateIPPathStat(statDict, path):
+    statDict['length'].append(len(path))
+    priva = locPrivaIP(path)
+    statDict['countPriva'].append(len(priva))
+    if priva:
+        statDict['posPriva'].append(priva.values())
+    else:
+        statDict['posPriva'].append([-1])
+    stars = locStarIP(path)
+    statDict['countStar'].append(len(stars))
+    if stars:
+        statDict['posStar'].append(stars.values())
+    else:
+        statDict['posStar'].append([-1])
+    return statDict
+
+def updateASpathStat(statDict, path):
+    statDict['length'].append(len(path))
+    priva = locPrivaAS(path)
+    statDict['countPriva'].append(len(priva))
+    if priva:
+        statDict['posPriva'].append(priva.values())
+    else:
+        statDict['posPriva'].append([-1])
+    stars = locStarAS(path)
+    statDict['countStar'].append(len(stars))
+    if stars:
+        statDict['posStar'].append(stars.values())
+    else:
+        statDict['posStar'].append([-1])
+    unk = locUnkAS(path)
+    statDict['countUnkown'].append(len(unk))
+    if unk:
+        statDict['posUnknown'].append(unk.values())
+    else:
+        statDict['posUnknown'].append([-1])
+    return statDict
+
+def pathChange(paths):
+    pp = zip(paths[1:], paths)
+    dist = [0,]
+    pos = [-1,]
+    for p in pp:
+        ch = ed.eval(p[0], p[1])
+        dist.append(ch)
+        if ch:
+            pos.append(locdiffPos(p[0],p[1]))
+        else:
+            pos.append(-1)
+    return (dist, pos)
