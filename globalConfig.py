@@ -26,8 +26,11 @@ DIC_IP_2_ASN = 'dic_ip2asn.csv' # Cymru
 DIC_IP_2_ASN_ARIN = 'dic_ip2asn_arin.csv' # ARIN
 DIC_IP_2_ASN_MERG = 'dic_ip2asn_merg.csv' # MERGE
 
-STAT_IP_PATH = 'stat_ip_path.json'
-STAT_AS_PATH_CY = 'stat_as_path_cy.json'
-STAT_AS_PATH_MG = 'stat_as_path_mg.json'
+STAT_IP_PATH = 'stat_ip_path.json' # ip path
+STAT_AS_PATH_CY = 'stat_as_path_cy.json' # as path based on Cymru dict
+STAT_AS_PATH_MG = 'stat_as_path_mg.json' # as path based on merged dict
+STAT_AS_PATH_AP = 'stat_as_path_ap.json' # as path approximated from mg path, remove invalid hops
 
-TRACE_TIME_STAMP = 'trace_tsmp.json'
+TRACE_PATH_REC = 'trace_path.json' # file storing parsed ip and AS level path at each traceroute meas
+
+TRACE_TIME_STAMP = 'trace_tsmp.json' # separate file for traceroute timestamps so that I don't have to sotre them in each other json file

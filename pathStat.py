@@ -32,8 +32,8 @@ pathNqdist = []
 diffAS = set()
 dictIPpathStat = {}
 dictASpathCyStat = {}
-#dictASpathRNStat = {}
 dictASpathMgStat = {}
+dictASpathAPStat = {}
 dictTraceTime = {}
 
 for pb in clean_trace:
@@ -42,20 +42,21 @@ for pb in clean_trace:
     dictIPpathStat[pb] = pt.ipPathStatDict()
     dictASpathCyStat[pb] = pt.asPathStatDict()
     dictASpathMgStat[pb] = pt.asPathStatDict()
+    dictASpathAPStat[pb] = pt.asPathStatDict()
     clean_trace[pb]['as_path_cy'] = []
     clean_trace[pb]['as_path_mg'] = []
-    #clean_trace[pb]['as_path_cy_rn'] = []
-    #clean_trace[pb]['as_path_mg_rn'] = []
+    clean_trace[pb]['as_path_ap'] = []
     for path in clean_trace[pb]['ip_path']:
         pathCY = pt.ip2asPath(path, ipDictCY)
         pathMG = pt.ip2asPath(path, ipDictMG)
+        pathAP = pt.pathAP(pathMG)
         clean_trace[pb]['as_path_cy'].append(pathCY)
-        #clean_trace[pb]['as_path_cy_rn'].append([saut for saut in pathCY if saut > 0])
         clean_trace[pb]['as_path_mg'].append(pathMG)
-        #clean_trace[pb]['as_path_mg_rn'].append([saut for saut in pathMG if saut > 0])
+        clean_trace[pb]['as_path_ap'].append(pathAP)
         dictIPpathStat[pb] = pt.updateIPPathStat(dictIPpathStat[pb], path)
         dictASpathCyStat[pb] = pt.updateASpathStat(dictASpathCyStat[pb], pathCY)
-        dictASpathMgStat[pb] = pt.updateASpathStat(dictASpathCyStat[pb], pathMG)
+        dictASpathMgStat[pb] = pt.updateASpathStat(dictASpathMgStat[pb], pathMG)
+        dictASpathAPStat[pb] = pt.updateASpathStat(dictASpathAPStat[pb], pathAP)
         pathCountTotal += 1
         if pathCY == pathMG:
             pathEq += 1
@@ -83,7 +84,9 @@ for pb in clean_trace:
     dis, pos = pt.pathChange(clean_trace[pb]['as_path_mg'])
     dictASpathMgStat[pb]['disChange'] = dis
     dictASpathMgStat[pb]['posChange'] = pos
-
+    dis, pos = pt.pathChange(clean_trace[pb]['as_path_ap'])
+    dictASpathAPStat[pb]['disChange'] = dis
+    dictASpathAPStat[pb]['posChange'] = pos
 
 with open(STAT_IP_PATH,'w') as f:
     json.dump(dictIPpathStat, f)
@@ -94,8 +97,14 @@ with open(STAT_AS_PATH_CY,'w') as f:
 with open(STAT_AS_PATH_MG,'w') as f:
     json.dump(dictASpathMgStat, f)
 
+with open(STAT_AS_PATH_AP, 'w') as f:
+    json.dump(dictASpathAPStat, f)
+
 with open(TRACE_TIME_STAMP, 'w') as f:
     json.dump(dictTraceTime, f)
+
+with open(TRACE_PATH_REC, 'w') as f:
+    json.dump(clean_trace, f)
 
 print "Total path count %d" % pathCountTotal
 print "Agreement %d" % pathEq

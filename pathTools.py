@@ -154,6 +154,9 @@ def locStarAS(path):
     return {saut: float(path.index(saut))/len(path) for saut in path if saut == -3}
 
 def locdiffPos(path1, path2):
+    if min(len(path1), len(path2)) == 0:
+        print path1, path2
+        return -2
     for i in range(min(len(path1), len(path2))):
         if path1[i] != path2[i]:
             break
@@ -225,7 +228,17 @@ def pathChange(paths):
         ch = ed.eval(p[0], p[1])
         dist.append(ch)
         if ch:
-            pos.append(locdiffPos(p[0],p[1]))
+            first_diff = locdiffPos(p[0],p[1])
+            pos.append(first_diff)
+            if first_diff == -2:
+                print "ERROR: empty path"
+                print paths
         else:
             pos.append(-1)
     return (dist, pos)
+
+def pathAP(path):
+    new_path = [hop for hop in path if hop > 0]
+    if path[-1] < 0:
+        new_path.append(path[-1])
+    return new_path
