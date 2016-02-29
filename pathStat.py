@@ -13,6 +13,17 @@ def read_pdid(file):
             pb_list.append(int(line))
     return pb_list
 
+def read_pbMeta(file):
+    pbMeta = {}
+    f = open(file, 'r')
+    for line in f:
+        cols = line.split(',')
+        if len(cols) >= 4 and 'id' not in cols[0]:
+            pbid = int(cols[0].strip())
+            asn = int(cols[3].strip())
+            pbMeta[pbid] = asn
+    return pbMeta
+
 alltrace = at.readTraceJSON(MES_TRACE_FILE)
 valid_id = read_pdid(PROBE_ID_VALID_FILE)
 pbAct = alltrace.keys()
@@ -21,12 +32,16 @@ clean_trace = {k: alltrace[k] for k in pbVal}
 
 ipDictCY = pt.loadIPDict(DIC_IP_2_ASN)
 ipDictMG = pt.loadIPDict(DIC_IP_2_ASN_MERG)
+pbASN = read_pbMeta(PROBE_META_FILE)
 
 countLoopCY = 0
 countLoopMG = 0
 pathCountTotal = 0
 pathEq = 0
 pathNq = 0
+localASNMiss = 0
+localMissAS = set()
+localFL = 0
 looppath = {}
 pathNqdist = []
 diffAS = set()
@@ -35,6 +50,7 @@ dictASpathCyStat = {}
 dictASpathMgStat = {}
 dictASpathAPStat = {}
 dictTraceTime = {}
+
 
 for pb in clean_trace:
     dictTraceTime[pb]={'time_md':clean_trace[pb]['time_md'],
@@ -49,6 +65,17 @@ for pb in clean_trace:
     for path in clean_trace[pb]['ip_path']:
         pathCY = pt.ip2asPath(path, ipDictCY)
         pathMG = pt.ip2asPath(path, ipDictMG)
+        if len(pathMG) > 1 and pathMG[0] != pbASN[pb]:
+            if pbASN[pb] in pathMG:
+                localFL += 1
+            pathCY = [pbASN[pb]] + pathCY
+            pathMG = [pbASN[pb]] + pathMG
+            pathCY = pt.fillHole(pathCY)
+            pathCY = pt.asPathFormatter(pathCY)
+            pathMG = pt.fillHole(pathMG)
+            pathMG = pt.asPathFormatter(pathMG)
+            localASNMiss += 1
+            localMissAS.add(pb)
         pathAP = pt.pathAP(pathMG)
         clean_trace[pb]['as_path_cy'].append(pathCY)
         clean_trace[pb]['as_path_mg'].append(pathMG)
@@ -105,6 +132,12 @@ with open(TRACE_TIME_STAMP, 'w') as f:
 
 with open(TRACE_PATH_REC, 'w') as f:
     json.dump(clean_trace, f)
+
+print "%d paths doesn't beign with the ASN hosting the probe." % localASNMiss
+print "%d them have local ASN somewhere in the middle." % localFL
+print "%d probes involved." % len(localMissAS)
+print localMissAS
+
 
 print "Total path count %d" % pathCountTotal
 print "Agreement %d" % pathEq
