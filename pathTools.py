@@ -166,7 +166,7 @@ def asPathStatDict():
     return {'length':[],
             'countPriva':[],
             'posPriva':[],
-            'countUnkown':[],
+            'countUnknown':[],
             'posUnknown':[],
             'countStar':[],
             'posStar':[],
@@ -212,7 +212,7 @@ def updateASpathStat(statDict, path):
     else:
         statDict['posStar'].append([-1])
     unk = locUnkAS(path)
-    statDict['countUnkown'].append(len(unk))
+    statDict['countUnknown'].append(len(unk))
     if unk:
         statDict['posUnknown'].append(unk.values())
     else:
@@ -242,3 +242,21 @@ def pathAP(path):
     if path[-1] < 0:
         new_path.append(path[-1])
     return new_path
+
+# given an ASN, find the ASN to its two sides
+def findEdge(path, val):
+    edgepaire = set()
+    for i in range(len(path)):
+        if path[i] == val and i > 0 and i < (len(path) - 1):
+            left = i - 1
+            while True:
+                if left == 0 or path[left] > 0:
+                    break
+                left -= 1
+            right = i + 1
+            while True:
+                if right == (len(path) - 1) or path[right] > 0 :
+                    break
+                right += 1
+            edgepaire.add((path[left], path[right]))
+    return edgepaire

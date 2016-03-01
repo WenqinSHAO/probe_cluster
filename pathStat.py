@@ -157,3 +157,23 @@ for pb in looppath:
         print "IP:\t%s" % p
         print "CY:\t%s" % pt.ip2asPath(p, ipDictCY)
         print "MG:\t%s" % pt.ip2asPath(p, ipDictMG)
+
+# find the ASes at the two ends of * in AS-path MG
+starpb = []
+starpair = set()
+for pb in dictASpathMgStat:
+    if sum(dictASpathMgStat[pb]['countStar'])>0:
+        startpb.append(pb)
+        for path in clean_trace[pb]['as_path_mg']:
+            for i in range(len(path)):
+                edge = pt.findEdge(path, -3)
+                if edge:
+                    starpair.update(pt.findEdge(path, -3))
+
+#print startpb
+print starpair
+
+
+unkpb = []
+for pb in dictASpathMgStat:
+    if sum
