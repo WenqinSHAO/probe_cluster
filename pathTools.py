@@ -139,19 +139,19 @@ def loopCheck(path):
     return loopAS
 
 def locPrivaIP(path):
-    return {saut: float(path.index(saut))/len(path) for saut in path if saut!='*' and ipaddress.ip_address(saut).is_private}
+    return {saut: float(path.index(saut)+1)/len(path) for saut in path if saut!='*' and ipaddress.ip_address(saut).is_private}
 
 def locStarIP(path):
-    return {saut: float(path.index(saut))/len(path) for saut in path if saut == '*'}
+    return {saut: float(path.index(saut)+1)/len(path) for saut in path if saut == '*'}
 
 def locPrivaAS(path):
-    return {saut: float(path.index(saut))/len(path) for saut in path if saut == -1}
+    return {saut: float(path.index(saut)+1)/len(path) for saut in path if saut == -1}
 
 def locUnkAS(path):
-    return {saut: float(path.index(saut))/len(path) for saut in path if saut == -2}
+    return {saut: float(path.index(saut)+1)/len(path) for saut in path if saut == -2}
 
 def locStarAS(path):
-    return {saut: float(path.index(saut))/len(path) for saut in path if saut == -3}
+    return {saut: float(path.index(saut)+1)/len(path) for saut in path if saut == -3}
 
 def locdiffPos(path1, path2):
     if min(len(path1), len(path2)) == 0:
@@ -160,7 +160,7 @@ def locdiffPos(path1, path2):
     for i in range(min(len(path1), len(path2))):
         if path1[i] != path2[i]:
             break
-    return float(i)/len(path2)
+    return float(i+1)/len(path2)
 
 def asPathStatDict():
     return {'length':[],
