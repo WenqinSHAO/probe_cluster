@@ -10,3 +10,7 @@ To be added...
 6. align ping measurements with *alignRTT.py*, produces *pingAL_min.csv*;
 7. *exploratoryAnalysis.R* reads *probes.csv* and *pingAL_min.csv* , produces clustering results, graphs and more;
 8. *plot_ping_suffix.py* read ids in files with certain suffix, and produce 3d RTT plots.
+9. *ip2asn\*.py* -> ip2asn dic
+10. *comIPDic.py* -> merged dic
+11. *pathStat.py* -> *stat_\*.json*
+12. *pathStat.R* -> figures
