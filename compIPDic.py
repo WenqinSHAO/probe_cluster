@@ -17,7 +17,7 @@ diffIP = []
 for ip in cymruDict:
     asnCY = cymruDict[ip]['asn']
     asnAR = arinDict[ip]['asn']
-    if asnCY != -2 and asnAR != -2:
+    if asnCY >0 and asnAR > 0:
         if asnCY == asnAR:
             EqcYaY += 1
         else:
