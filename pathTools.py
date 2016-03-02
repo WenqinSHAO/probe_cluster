@@ -8,6 +8,8 @@ from collections import Counter
 import ipaddress
 import editdistance as ed
 
+
+
 def ip2asARIN(ip):
     asinfo = {}
     cmdARIN = "whois "
@@ -237,14 +239,24 @@ def pathChange(paths):
             pos.append(-1)
     return (dist, pos)
 
-def pathAP(path):
-    new_path = [hop for hop in path if hop > 0]
+def pathAP(path, noMercy):
+    new_path = path
+    expt = []
+    # find AS hops that cant not be absorbed
+    for i in range(len(path)):
+        if path[i] < 0 and i > 0 and i < (len(path) - 1):
+            edge = findEdge(path, i)
+            if edge in noMercy:
+                expt.append(i)
+    # absord the <0 AS hops that are not in the exceptions
+    new_path = [hop for hop in path if hop > 0 or path.index(hop) in expt]
+    # if a path ends with <0 AS hops, keep that invalid ends
     if path[-1] < 0:
         new_path.append(path[-1])
     return new_path
 
-# given an ASN, find the ASN to its two sides
-def findEdge(path, val):
+# given an ASN path and an ASN(val), find the ASN to the two sides of the val
+def findEdgePath(path, val):
     edgepaire = set()
     for i in range(len(path)):
         if path[i] == val and i > 0 and i < (len(path) - 1):
@@ -260,3 +272,20 @@ def findEdge(path, val):
                 right += 1
             edgepaire.add((path[left], path[right]))
     return edgepaire
+
+# given a path a position in the path, find the two edges to that position
+def findEdge(path, index):
+    left = index - 1
+    while True:
+        if left == 0 or path[left] > 0:
+            break
+        left -= 1
+    right = index + 1
+    while True:
+        if right == (len(path) - 1) or path[right] > 0 :
+            break
+        right += 1
+    if path[left] >0 and path[right] > 0 :
+        return (path[left], path[right])
+    else:
+        return tuple()

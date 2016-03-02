@@ -24,6 +24,19 @@ def read_pbMeta(file):
             pbMeta[pbid] = asn
     return pbMeta
 
+def readNoMercy(file):
+    noMercy = set()
+    f = open(file, 'r')
+    for line in f:
+        cols = line.split(',')
+        if len(cols) >= 2:
+            a = int(cols[0].strip())
+            b = int(cols[1].strip())
+            noMercy.add((a,b))
+            noMercy.add((b,a))
+    return noMercy
+
+
 alltrace = at.readTraceJSON(MES_TRACE_FILE)
 valid_id = read_pdid(PROBE_ID_VALID_FILE)
 pbAct = alltrace.keys()
@@ -33,6 +46,7 @@ clean_trace = {k: alltrace[k] for k in pbVal}
 ipDictCY = pt.loadIPDict(DIC_IP_2_ASN)
 ipDictMG = pt.loadIPDict(DIC_IP_2_ASN_MERG)
 pbASN = read_pbMeta(PROBE_META_FILE)
+noMercy = readNoMercy(PAIR_NO_MERCY)
 
 countLoopCY = 0
 countLoopMG = 0
@@ -65,6 +79,8 @@ for pb in clean_trace:
     for path in clean_trace[pb]['ip_path']:
         pathCY = pt.ip2asPath(path, ipDictCY)
         pathMG = pt.ip2asPath(path, ipDictMG)
+        # check if the AS MG path begin with the local ASN of the probe
+        # if not, do some treatmeant
         if len(pathMG) > 1 and pathMG[0] != pbASN[pb]:
             if pbASN[pb] in pathMG:
                 localFL += 1
@@ -76,7 +92,8 @@ for pb in clean_trace:
             pathMG = pt.asPathFormatter(pathMG)
             localASNMiss += 1
             localMissAS.add(pb)
-        pathAP = pt.pathAP(pathMG)
+        # absorbe <0 ASN with noMercy expections
+        pathAP = pt.pathAP(pathMG, noMercy)
         clean_trace[pb]['as_path_cy'].append(pathCY)
         clean_trace[pb]['as_path_mg'].append(pathMG)
         clean_trace[pb]['as_path_ap'].append(pathAP)
@@ -166,14 +183,40 @@ for pb in dictASpathMgStat:
         startpb.append(pb)
         for path in clean_trace[pb]['as_path_mg']:
             for i in range(len(path)):
-                edge = pt.findEdge(path, -3)
-                if edge:
-                    starpair.update(pt.findEdge(path, -3))
+                if path[i] == -3 and i > 0 and i < (len(path) - 1):
+                    edge = pt.findEdge(path, i)
+                    if edge:
+                        starpair.add(edge)
 
-#print startpb
+print startpb
 print starpair
 
-
+# find the ASes at the two ends of unknown mapping in AS-path MG
 unkpb = []
+unkpair = set()
 for pb in dictASpathMgStat:
-    if sum
+    if sum(dictASpathMgStat[pb]['countUnknown'])>0:
+        unkpb.append(pb)
+        for path in clean_trace[pb]['as_path_mg']:
+            for i in range(len(path)):
+                if path[i] == -2 and i > 0 and i < (len(path) - 1):
+                    edge = pt.findEdge(path, i)
+                    if edge:
+                        unkpair.add(edge)
+
+print unkpb
+print unkpair
+
+# count unabsorbed <0 ASN value
+noMercyCount = 0
+noMercyProbe = set()
+invalEndCount = 0
+for pb in clean_trace:
+    for path in clean_trace[pb]['as_path_ap']:
+        if -2 in path or -3 in path:
+            noMercyCount += 1
+            noMercyProbe.add(pb)
+        if path[-1] < 0:
+            invalEndCount += 1
+print noMercyCount
+print invalEndCount

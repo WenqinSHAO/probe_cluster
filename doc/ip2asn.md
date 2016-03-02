@@ -118,7 +118,7 @@ We assume this loop in AS-path is due the transient affect of AS-level path chan
 3. compress multiple consecutive same ASN in to one;
 4. for a hole, i.e. negative ASN in middle and valid ASN both side, if the two ends have same ASN, fill the hole with the same ASN as the ones on the edge;
 5. compress again multiple consecutive same ASN in to one;
-6. check if the AS path begins with the ASN hosting the probe (refer to as local ASN) ; 2774 paths are of such case; 1148 among them have the local ASN somewhere after; 17 probes are involved. Most of the corresponding IP-path begins with private IP address (ASN thus removed by step 2), and a few with \* (ASN remained in the form -3). Two probes, 17831 and 12460, begin with IP addresses right to the next.
+6. check if the AS path begins with the ASN hosting the probe (refer to as local ASN) ; 2774 paths does not begin with local ASN; 1148 among them have the local ASN somewhere after; 17 probes are involved. Most of the corresponding IP-path begins with private IP address (ASN thus removed by step 2), and a few with \* (ASN remained in the form -3). Two probes, 17831 and 12460, begin with IP addresses right to the next.
     1. if is the case, append local ASN at the beginning;
     2. fill the hole;
     3. compress consecutive same ASN.
@@ -149,7 +149,7 @@ Most of these private IP shall disappear after previous described mapping steppi
 4 probes have -1 ASN in the middle of the path.
 For 3 (18567, 19363 and 22992) of them, the private mapping is at the second hop, while one (19514) at 3rd AS hop.
 We then manually checked the ASN at the two sides of the private mapping.
-For 19363, 22992 and 19514, the ASN to the right side of the AS path is known to the provider of the ASN to the left side. Thus it is safe to remove this -1, as no additional ASN shall be in between, even if there is, say an IXP, we are not able to tell.
+For 19363, 22992 and 19514, the ASN to the right side of the AS path is known to be the provider of the ASN to the left side. Thus it is safe to remove this -1, as no additional ASN shall be in between, even if there is, say an IXP, we are not able to tell.
 For 18567, the ASN path is [12993, -1, 1200, 6939, 226]. According to hurricane, 1200 dosen't appear to be one of the provider of 12993, but it is an IXP. We henceforth assume that 12993 and 6939 peer at 1200. (How to verify?)
 We assume it is safe as well to remove this -1.
 
@@ -219,4 +219,5 @@ for the following \* shall not be removed, how many path do they impact?
 
 (15368, 1835) relationship not found
 (25186, 5511) there is 3125 in between
+
 (8220, 16374) 16374 IXP
