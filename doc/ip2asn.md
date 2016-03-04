@@ -34,7 +34,7 @@ Nonetheless, we merged the two ip2asn dictionary (*dic_ip2asn.csv* from Cymru, *
 The intention behind the merge is to see, how it is going to impact the path mapping.
 
 
-# Difference using Cymru dictionary and the merged dictionary
+## Difference using Cymru dictionary and the merged dictionary
 ```
 Total path count 43008
 Agreement 26912
@@ -124,10 +124,7 @@ We assume this loop in AS-path is due the transient affect of AS-level path chan
     3. compress consecutive same ASN.
 7. remove -1,-2,-3 if edges are not in no-mercy list.
 
-### IP path Length
-Most probes (35) have an avg IP path length in (13,14], the main stream is from (11,16], having 96 probes. This observation is sort of biased by the important presence of probes from Germany.
 
-### AS MG path length
 
 ### Private IP in IP path
 ```
@@ -162,8 +159,6 @@ Most of these stars shall possibly be absorbed after mapping.
 ### Stars * AS MG path
 Only 9 probes have constantly 1 \* mapping in the AS-path MG.
 We investigated the relationship between each pair of ASes on the two sides of the \*,
-and found out most of them have known peering relationship, except one.
-We thus assume it is safe to remove -3 in AS MG path.
 
 (8251, 6939) client-provider
 (34948, 8426) client-provider
@@ -182,24 +177,24 @@ We thus assume it is safe to remove -3 in AS MG path.
 (3320, 2914) client-provider
 (226, 2914) client-provider
 (5511, 2914) client-provider
-
+17
 (44729, 226) relation not found, 44729 Equinix IXP
 (44729, 6939) relation not found, 44729 Equinix IXP
 (16374, 6939) 16374's relation not found, being a IXP, very possible connected to hurricane
 (28716, 16004) direct relation not found, 16004 is IXP
-
+4
 (6939, 226) provider-client
-
+1
 (9186, 5626) peering relation confirmed
-
+1
 (61303, 201011) 33891 is the provider of 61303, 201011 and 33891 all belong to Netzbetrieb GmbH, seem to be siblings.
-
+1
 for the following \* shall not be removed, how many path do they impact?
 (2200, 30781) relation not found
 (34524, 8866) relation not found
 (12644, 226) relation not found
 (174, 226) relation not found
-
+4
 ### unknown IP to ASN mapping
 24 probes constantly have one unknown mapping remained in the AS MG path.
 (12570, 6939) client-provider
@@ -216,8 +211,14 @@ for the following \* shall not be removed, how many path do they impact?
 (9050, 6939) client-provider
 (8866, 6939) client-provider
 (29405, 6939) client-provider
-
+13
 (15368, 1835) relationship not found
+1
 (25186, 5511) there is 3125 in between
-
+1
 (8220, 16374) 16374 IXP
+1
+### IP path Length
+Most probes (35) have an avg IP path length in (13,14], the main stream is from (11,16], having 96 probes. This observation is sort of biased by the important presence of probes from Germany.
+
+### AS MG path length

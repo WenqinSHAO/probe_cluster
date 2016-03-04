@@ -163,11 +163,12 @@ print "Disagree %d" % pathNq
 print "Cy loop count %d" % countLoopCY
 print "Mg loop count %d" % countLoopMG
 
-
+# check the ASN that causes the difference in AS CY and AS MG paths
 for asn in diffAS:
     print asn
     print pt.asnLookup(asn)
 
+# check the pb and its paths containing a loop
 for pb in looppath:
     print pb
     for p in looppath[pb]['cymru']:
@@ -175,7 +176,7 @@ for pb in looppath:
         print "CY:\t%s" % pt.ip2asPath(p, ipDictCY)
         print "MG:\t%s" % pt.ip2asPath(p, ipDictMG)
 
-# find the ASes at the two ends of * in AS-path MG
+# find the ASN pairs at the two ends of * in AS-path MG
 starpb = []
 starpair = set()
 for pb in dictASpathMgStat:
@@ -191,7 +192,7 @@ for pb in dictASpathMgStat:
 print startpb
 print starpair
 
-# find the ASes at the two ends of unknown mapping in AS-path MG
+# find the ASN pairs at the two ends of unknown mapping in AS-path MG
 unkpb = []
 unkpair = set()
 for pb in dictASpathMgStat:
@@ -207,7 +208,7 @@ for pb in dictASpathMgStat:
 print unkpb
 print unkpair
 
-# count unabsorbed <0 ASN value
+# count unabsorbed -2, -3 ASN after hole cleaning
 noMercyCount = 0
 noMercyProbe = set()
 invalEndCount = 0
@@ -220,3 +221,86 @@ for pb in clean_trace:
             invalEndCount += 1
 print noMercyCount
 print invalEndCount
+
+
+
+headPriva = 0 # the number of IP paths that begin with private address
+headStar = 0 # the number of IP paths that begin with *
+headUnk = 0 # the number of IP paths that begin with unknown IP
+headBingo = 0 # the number of IP paths that begin with the probe local ASN
+headOther = 0 # cases other than above
+localMid_priva = 0 # begin with private IP but local ASN somewhere in middle
+localMid_star = 0 # begin with * but local ASN somewhere in middle
+localMid = 0 # begin with unknown IP but local ASN somewhere in middle
+headOtherSet = set() # IP path that begin with ip in other ASN than the probe one, ASN pair probe ASN, first ASN
+susset = set() # for probe begin with private IP, but don't have probe ASN in the middle, ASN pair probe ASN, first ASN
+
+for pb in clean_trace:
+    for path in clean_trace[pb]['ip_path']:
+        raw = pt.ip2asPathRAW(path, ipDictMG)
+        if raw[0] == -1:
+            headPriva += 1
+            if pbASN[pb] in raw:
+                localMid_priva += 1
+            else:
+                clean = pt.ip2asPath(path, ipDictMG)
+                clean = [hop for hop in clean if hop > 0]
+                if clean:
+                    susset.add((pbASN[pb], clean[0]))
+        elif raw[0] == -2:
+            headUnk += 1
+            if pbASN[pb] in raw:
+                localMid += 1
+        elif raw[0] == -3:
+            headStar += 1
+            if pbASN[pb] in raw:
+                localMid_star += 1
+        elif raw[0] == pbASN[pb]:
+            headBingo += 1
+        else:
+            headOther += 1
+            headOtherSet.add((pbASN[pb], raw[0]))
+
+# count the number of each ending ASN
+endASdict = {}
+for pb in clean_trace:
+    for path in clean_trace[pb]['as_path_ap']:
+        tail = path[-1]
+        if tail not in endASdict:
+            endASdict[tail] = 0
+        endASdict[tail] += 1
+        if tail != 226 and tail > 0:
+            idx = clean_trace[pb]['as_path_ap'].index(path)
+            print clean_trace[pb]['ip_path'][idx]
+            print pt.ip2asPathRAW(clean_trace[pb]['ip_path'][idx], ipDictMG)
+
+rawPcount = 0 # the number of RAW translated AS path have at least one hole
+naivePcount = 0 # the number of naive path have at least one hole
+finalPcount = 0 # the number of AS AP path have at least one hole
+rawHcount = 0 # the number of holes in raw translated AS path
+naieveHcount = 0 # the number of holes in naive AS path
+finalHcount = 0 # the number of holes in final AS AP path
+allIPHop = 0 # the total number of IP hops
+allNaiveHop = 0 # the total number of AS hop in Navie path
+allfinalHop = 0 # the total number of AS hop in final path
+for pb in clean_trace:
+    for path in clean_trace[pb]['ip_path']:
+        raw_path = pt.ip2asPathRAW(path, ipDictMG)
+        holes = [hop for hop in raw_path if hop < 0]
+        if holes:
+            rawPcount += 1
+            rawHcount += len(holes)
+        allIPHop += len(path)
+        naive = pt.fillHole(raw_path)
+        naive = pt.asPathFormatter(naive)
+        holes = [hop for hop in naive if hop <0]
+        if holes:
+            naivePcount += 1
+            naieveHcount += len(holes)
+        allNaiveHop += len(naive)
+    for path in clean_trace[pb]['as_path_ap']:
+        holes = [hop for hop in path if hop <0]
+        if holes:
+            finalPcount += 1
+            finalHcount += len(holes)
+        allfinalHop += len(path)
