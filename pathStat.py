@@ -3,6 +3,10 @@ import pathTools as pt
 from globalConfig import *
 import editdistance as ed
 import json
+from collections import Counter
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 
 def read_pdid(file):
@@ -64,11 +68,13 @@ dictASpathCyStat = {}
 dictASpathMgStat = {}
 dictASpathAPStat = {}
 dictTraceTime = {}
+dictParisId = {}
 
 
 for pb in clean_trace:
-    dictTraceTime[pb]={'time_md':clean_trace[pb]['time_md'],
-                       'time_epc':clean_trace[pb]['time_epc']}
+    dictTraceTime[pb] = {'time_md':clean_trace[pb]['time_md'],
+                         'time_epc':clean_trace[pb]['time_epc']}
+    dictParisId[pb] = clean_trace[pb]['paris_id']
     dictIPpathStat[pb] = pt.ipPathStatDict()
     dictASpathCyStat[pb] = pt.asPathStatDict()
     dictASpathMgStat[pb] = pt.asPathStatDict()
@@ -149,6 +155,9 @@ with open(TRACE_TIME_STAMP, 'w') as f:
 
 with open(TRACE_PATH_REC, 'w') as f:
     json.dump(clean_trace, f)
+
+with open(TRACE_PARIS_ID, 'w') as f:
+    json.dump(dictParisId, f)
 
 print "%d paths doesn't beign with the ASN hosting the probe." % localASNMiss
 print "%d them have local ASN somewhere in the middle." % localFL
@@ -304,3 +313,125 @@ for pb in clean_trace:
             finalPcount += 1
             finalHcount += len(holes)
         allfinalHop += len(path)
+
+# check if atlas built-in traceroute measurement uses Paris traceroute
+# check how many unique Paris IP each probe trace have
+parisZeroCount = 0
+parisIdCount = {}
+dictParisId = {}
+for pb in clean_trace:
+    if not sum(clean_trace[pb]['paris_id']):
+        parisZeroCount += 1
+    parisIdCount[pb] = Counter(clean_trace[pb]['paris_id'])
+    dictParisId[pb] = clean_trace[pb]['paris_id']
+
+with open(TRACE_PARIS_ID, 'w') as f:
+    json.dump(dictParisId, f)
+
+# count and rank AS occurence
+
+
+# group RTT and paris id by path
+# one ID can appear in different path
+path2rtt = {}
+path2Paris = {}
+DEST = '192.228.79.201'
+for pb in clean_trace:
+    path2rtt[pb] = {}
+    path2Paris[pb] = {}
+    ip_paths = clean_trace[pb]['ip_path']
+    rtts =  clean_trace[pb]['min']
+    paris = clean_trace[pb]['paris_id']
+    for i in range(len(ip_paths)):
+        if ip_paths[i][-1] == DEST:
+            path = ','.join(ip_paths[i])
+            rtt_ = rtts[i]
+            id_ = paris[i]
+            if path not in path2rtt[pb]:
+                path2rtt[pb][path] = []
+                path2Paris[pb][path] = set()
+            path2rtt[pb][path].append(rtt_[-1])
+            path2Paris[pb][path].add(id_)
+
+for pb in clean_trace:
+    rtt_box = []
+    rtt_lab = []
+    rtt_box.append([])
+    rtt_lab.append('all')
+    for path in path2rtt[pb]:
+        rtt_box[0] += path2rtt[pb][path]
+        rtt_box.append(path2rtt[pb][path])
+        rtt_lab.append(','.join([str(i) for i in path2Paris[pb][path]]))
+    fig, ax = plt.subplots()
+    hd = ax.boxplot(rtt_box, labels=rtt_lab, whis='range')
+    labs = ax.get_xticklabels()
+    plt.setp(labs, rotation=90, fontsize=10)
+    fig.set_size_inches(6,4)
+    fig_name = ('rtt_box_%d.pdf'%pb)
+    plt.savefig(fig_name, bbox_inches='tight', format='pdf')
+    plt.close()
+
+
+
+
+
+
+
+
+
+
+
+parisRTTDict = {}
+parisPathDict = {}
+DEST = '192.228.79.201'
+for pb in clean_trace:
+    parisRTTDict[pb] = {}
+    parisPathDict[pb] = {}
+    for i in range(len(clean_trace[pb]['ip_path'])):
+        paris_id = dictParisId[pb][i]
+        # initialize the Paris ID array
+        if paris_id not in parisRTTDict:
+            parisRTTDict[pb][paris_id] = []
+            parisPathDict[pb][paris_id] = set()
+        ip_path = clean_trace[pb]['ip_path'][i]
+        rtt_ = clean_trace[pb]['min'][i]
+        # if the measurement ends with the destination counts it
+        if ip_path[-1] == DEST:
+            parisRTTDict[pb][paris_id].append(rtt_)
+            parisPathDict[pb][paris_id].add(','.join(ip_path))
+# tuple of probe and Paris ID that have multiple paths
+multipathID = []
+for pb in clean_trace:
+    for paris_id in parisPathDict[pb]:
+        if len(parisPathDict[pb][paris_id]) > 1:
+            multipathID.append((pb, paris_id))
+# non of the probe-id tuple have more than one path
+
+# merge ID's if have the same path, update observed RTT as well
+mgParisRTT = {}
+mgParisPath = {}
+for pb in clean_trace:
+    allpath = set()
+    for paris_id in parisPathDict[pb]:
+        allpath.update(parisPathDict[pb][paris_id])
+    allpath = list(allpath)
+    # path to paris id dictionary
+    revDict = {}
+    for path in allpath:
+        revDict[path] = []
+        for paris_id in parisPathDict[pb]:
+            if list(parisPathDict[pb][paris_id])[0] == path:
+                revDict[path].append(paris_id)
+    # new dict with new key and merged RTT
+    mgParisRTT[pb] = {}
+    mgParisPath[pb] = {}
+    for path in revDict:
+        ids = revDict[path]
+        mg_rtt = []
+        new_ids = []
+        for id_ in ids:
+             mg_rtt += parisRTTDict[pb][id_]
+             new_ids.append(str(id_))
+        new_ids = ','join(new_ids)
+        mgParisRTT[pb][new_ids] = mg_rtt
+        mgParisPath[pb][new_ids] = path

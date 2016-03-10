@@ -1,10 +1,16 @@
+library(rjson)
 library(lattice)
 library(ggplot2)
+
 #load time traceroute timestamp
 temp = fromJSON(file='trace_tsmp.json')
 time.epc = lapply(temp, getlistAtt, 'time_epc')
 time.epc  = lapply(time.epc, toEpoc)
 time.trace = data.frame(row.names=as.integer(attributes(temp)$names), tstp=I(time.epc), stringsAsFactors = F)
+
+#load paris id
+temp = fromJSON(file='trace_paris.json')
+paris.id = data.frame(row.names = names(temp), parisID = I(temp))
 
 #load ip path stat file
 fn ='stat_ip_path.json'
@@ -217,8 +223,8 @@ length(pbs)
 pos.byProbe = data.frame()
 for (pb in pbs){
   pos = as.numeric(unlist(stat.asmg[pb,]$posStar))
-  pos = pos[! pos %in% c(-1,1)]
-  #pos = pos[pos %in% c(1)]
+  #pos = pos[! pos %in% c(-1,1)]
+  #pos = pos[pos %in% c(0)]
   # change the above term to plot all, mid, and * at the very end
   posHop = pos * path.stat[pb,]$avgPathLen.ASMG[[1]]
   pbid = as.numeric(rep(pb, length(pos)))
@@ -358,7 +364,8 @@ group = factor(group, levels(group)[c(4,2,3,1)])
 pos.byCount = data.frame(pos=pos, group=as.factor(group))
 pdf('posChange_ip_byGroup.pdf', width = 4, height=4)
 g = ggplot(pos.byCount, aes(x=pos, fill=group))
-g = g + geom_histogram(breaks=seq(0,1,0.05), position = 'stack', alpha=0.8)
+g = g + geom_histogram(breaks=seq(0,1,0.05))
+g = g + geom_histogram(breaks=seq(0,1,0.05), position = 'stack', alpha=0.8, color=I('white'), show_guide=F)
 #g = g + coord_cartesian(xlim = c(0,1))
 g = g + scale_fill_discrete(name="Probe group")
 g = g + xlab("Normalized Position")
@@ -393,7 +400,7 @@ for (i in 1:nrow(stat.asap)){
     for (j in 1:length(stat.asap[i,]$posChange[[1]])){
       if (stat.asap[i,]$posChange[[1]][j] > 0){
         pos = append(pos, stat.asap[i,]$posChange[[1]][j])
-        posHop = append(posHop, stat.asap[i,]$posChange[[1]][j] * stat.asap[i,]$length[[1]][j])
+        posHop = append(posHop, stat.asap[i,]$posChange[[1]][j] * stat.asap[i,]$length[[1]][j-1])
         pbid = append(pbid, row.names(stat.asap)[i])
         change.group = append(change.group, as.character(change.levelIP[i]))
       }
@@ -429,3 +436,74 @@ g = g + theme(legend.position='top')
 g = g + theme(text=element_text(size=14))
 print(g)
 dev.off()
+
+#change distance IP
+change.count = as.double(unlist(path.stat$changeCount.IP))/336
+change.level = cut(change.count, breaks=c(0,0.25,0.4,0.75,1), labels=c('Rare', 'Low', 'Mid', 'High'))
+change.dist = as.numeric(unlist(path.stat$changeDis.IP)) / as.numeric(unlist(path.stat$avgPathLen.IP))
+change.dist = as.data.frame(change.dist)
+change.dist[['level']] = change.level
+pdf('dist_ip.pdf', width=4, height=4)
+g = ggplot(change.dist, aes(x=change.dist, fill=level))
+g = g + geom_histogram()
+g = g + geom_histogram(poisition='stack', color=I('white'), alpha= 1, show_guide=F )
+g = g + xlab('Average Path Change Distance /\n Average Path Length')
+g = g + ylab('Probe Count')
+g = g + scale_fill_discrete(name="Probe group")
+g = g + theme(legend.position='top')
+g = g + theme(text=element_text(size=14))
+print(g)
+dev.off()
+
+#path change distance at as level
+change.dist = as.numeric(unlist(path.stat$changeDis.ASAP)) / as.numeric(unlist(path.stat$avgPathLen.ASAP))
+change.dist = as.data.frame(change.dist)
+change.dist[['level']] = change.level
+pdf('dist_asap.pdf', width=4, height=4)
+g = ggplot(na.omit(change.dist), aes(x=change.dist, fill=level))
+g = g + geom_histogram()
+g = g + geom_histogram(poisition='stack', color=I('white'), alpha= 1, show_guide=F )
+g = g + xlab('Average Path Change Distance /\n Average Path Length')
+g = g + ylab('Probe Count')
+g = g + scale_fill_discrete(name="Probe group")
+g = g + theme(legend.position='top')
+g = g + theme(text=element_text(size=14))
+print(g)
+dev.off()
+
+change.dist = round(as.numeric(unlist(path.stat$changeDis.ASAP)),1)
+change.dist = as.data.frame(change.dist)
+change.dist[['level']] = change.level
+pdf('distASHOP_asap.pdf', width=4, height=4)
+g = ggplot(na.omit(change.dist), aes(x=as.factor(change.dist), fill=level))
+g = g + geom_histogram()
+g = g + geom_histogram(poisition='stack', color=I('white'), alpha= 1, show_guide=F )
+g = g + xlab('Average Path Change Distance')
+g = g + ylab('Probe Count')
+g = g + scale_fill_discrete(name="Probe group")
+g = g + theme(legend.position='top')
+g = g + theme(text=element_text(size=14))
+print(g)
+dev.off()
+
+
+# relation between RTT, changepoints, path changes, and Paris ID
+for (pb in row.names(stat.ippath)){
+  rtt.ts = pbRTT[pb,]$ts
+  idx = which(row.names(pbRTT)==pb)
+  chptsChange = cpts(chptsMeanVar[[idx]])
+  ippathChange = time.trace[pb,][[1]][which(stat.ippath[pb,]$disChange[[1]]>0)]
+  aspathChange = time.trace[pb,][[1]][which(stat.asap[pb,]$disChange[[1]]>0)]
+  filename <- sprintf("change_%s.pdf", pb)
+  pdf(filename, width = 14, height = 10)
+  par(mar = c(5,5,1,5))
+  plot(tstp, rtt.ts, type='l', xlab='Time', ylab='RTT(ms)')
+  abline(v=tstp[chptsChange], col='red', lwd=1.5)
+  abline(v=ippathChange, col='blue')
+  abline(v=aspathChange, col='green', lwd=3, lty=3)
+  par(new=T)
+  plot(time.trace[pb,][[1]], paris.id[pb,][[1]], type='l', col='#636363', axes=F, xlab=NA, ylab=NA)
+  axis(side=4)
+  mtext(side = 4, line = 3, 'Paris ID')
+  dev.off()
+}
