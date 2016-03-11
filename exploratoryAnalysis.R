@@ -98,6 +98,9 @@ for (i in c(1:(length(bins)-1))){
 # save ft dataframe for furhter uses, calculate smpen is costly
 saveRDS(pbFT, file='features.Rda')
 
+# load ft data from file
+#pbFT = readRDS(file='features.Rda')
+
 # calc scaled ft for each feature space
 scale.fft <- scale(pbFT_fft[, !(variable.names(pbFT_fft) %in% c("id", "cls")), drop=F])
 pca.fft <- princomp(scale.fft)

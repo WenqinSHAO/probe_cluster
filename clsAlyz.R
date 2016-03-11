@@ -9,9 +9,21 @@ subMin <- function(x) {
   return(as.vector(x-min(x)))
 }
 
+subMin01 <- function(x) {
+  return(as.vector(x-min(x) + 0.1))
+}
+
 #substract a vector by its mode val
 subMod <- function(x) {
   return(as.vector(x-Mode(x)))
+}
+
+centerStd <- function(x) {
+   t = std(x)
+   c = mean(x)
+   d = c-t
+   m = min(x)
+   return(as.vector(x-round(min(c(d,m)),0)))
 }
 
 # given two vector of identical length val and rep
