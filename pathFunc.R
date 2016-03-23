@@ -33,3 +33,12 @@ avgChange <- function(v){
   v = v[which(v>0)]
   return(mean(v))
 }
+
+# for element in a, calculate the distance to the cloest element in b
+minDis <- function(a, b){
+  dis = vector()
+  for (t in a){
+    dis = append(dis, min(abs(as.numeric(b-t))))
+  }
+  return(dis)
+}

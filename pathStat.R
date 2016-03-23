@@ -486,7 +486,9 @@ g = g + theme(text=element_text(size=14))
 print(g)
 dev.off()
 
-
+ts.submin <- apply(pbRTT$ts, 1, subMin)
+ts.submin <- t(ts.submin)
+chptsMeanVar <- apply(ts.submin, 1, cpt.meanvar, test.stat = 'Poisson', method = 'PELT')
 # relation between RTT, changepoints, path changes, and Paris ID
 for (pb in row.names(stat.ippath)){
   rtt.ts = pbRTT[pb,]$ts
@@ -507,3 +509,186 @@ for (pb in row.names(stat.ippath)){
   mtext(side = 4, line = 3, 'Paris ID')
   dev.off()
 }
+
+# for each AS path change, find the distance in time to the closet RTT change found by changepoint analysis
+df.chDis = data.frame(id=as.numeric(row.names(stat.asap)), row.names = row.names(stat.asap))
+tau = 7 # short segment absorption threshould
+disASRTT = list()
+disASRTT.vector = vector()
+coreFlag = vector() # flag the probes all of AS changes are non-matching
+for( pb in row.names(df.chDis)){
+  idx = which(row.names(pbRTT)==pb)
+  chptsChange = cpts(chptsMeanVar[[idx]])
+  chptsChange = absorbChpts(chptsChange, tau)
+  rttChange = tstp[chptsChange]
+  aspathChange = time.trace[pb,][[1]][which(stat.asap[pb,]$disChange[[1]]>0)]
+  d = minDis(aspathChange, rttChange)
+  disASRTT.vector = append(disASRTT.vector, d)
+  if (length(d)==0){
+    coreFlag = append(coreFlag, -1)
+  }else if (length(d[d<1800])==0){
+    coreFlag = append(coreFlag, 1)
+  }else{
+    coreFlag = append(coreFlag, 0)
+  }
+  d = list(d)
+  names(d) = pb
+  disASRTT = append(disASRTT, d)
+}
+df.chDis[['DisASRTT']] = disASRTT
+df.chDis[['coreFlag']] = coreFlag
+
+#cdf graph for the AS path change and RTT distance
+disASRTT.minute = as.double(disASRTT.vector)/60
+cdf = ecdf(disASRTT.minute)
+n = length(disASRTT.minute)
+options(scipen = 999)
+pdf('dis_as_rtt.pdf', width=6, height = 4)
+plot(sort(disASRTT.minute), 1:n, main='', log='xy', type='s', xlab='Distance in Time (minute)', ylab='Number of AS Path Changes')
+abline(v=30, col='blue', lty=2)
+abline(h=cdf(30)*n, col='blue', lty=2)
+lab = sprintf("%d AS path changes have an RTT change within 30min", cdf(30)*n)
+mtext(lab, 3)
+dev.off()
+
+# load all the paths, large fie
+temp = fromJSON(file='trace_path.json')
+# for those have no matching AS path change, time index of path change and path
+id = which(df.chDis$coreFlag==1)
+pbs = row.names(df.chDis[id,])
+pos = list()
+pos.path = list()
+pos.ippath = list()
+for(pb in pbs){
+  p = which(stat.asap[pb,]$disChange[[1]]>0)
+  asp = list(temp[[pb]]$as_path_ap[as.vector(p)])
+  names(asp) = pb
+  pos.path = append(pos.path, asp)
+  ipp = list(temp[[pb]]$ip_path[as.vector(p)])
+  names(ipp) = pb
+  pos.ippath = append(pos.ippath, ipp)
+  p =  list(p)
+  names(p) = pb
+  pos = append(pos, p)
+}
+# all of these path changes are due to *
+
+# we generalize the case there
+# for each non-RTT-matching AS path change, we identify
+# where in path the change happens, IP and ASN
+# the probe it belongs
+# the hop before change, IP and ASN
+# ? the ip hop that cause AS path change
+# check also matched AS path changes
+dict = read.csv2('dic_ip2asn_merg.csv', header = F, stringsAsFactors = F)
+iptoASN <- function(s, dict){
+  asn = 0
+  if(s == '*'){
+    asn = -3
+  }else if(s == 'TRUC'){
+    asn = -4
+  }else if(s=='DIFFHEAD'){
+    asn = -5
+  }else{
+    asn = asn = dict[dict$V1==s,]$V2
+  }
+  return(asn)
+}
+nomatch.pb = vector()
+nomatch.curASN = vector()
+nomatch.prevASN = vector()
+match.pb = vector()
+match.curASN = vector()
+match.prevASN = vector()
+for (pb in row.names(df.chDis)){
+  nmIdx = which(df.chDis[pb,]$DisASRTT[[1]]>1800)
+  mIdx = which(df.chDis[pb,]$DisASRTT[[1]]<=1800)
+  if(length(nmIdx)>0){
+    IDpchg = which(stat.asap[pb,]$disChange[[1]]>0)
+    IDpchg.nm = IDpchg[nmIdx]
+    for(pid in IDpchg.nm){
+      nomatch.pb = append(nomatch.pb, pb)
+      cur = temp[[pb]]$as_path_ap[[pid]]
+      prev = temp[[pb]]$as_path_ap[[pid-1]]
+      s = cur[cur!=prev][1]
+      if(is.na(s)){
+        s= -1 # -1 for trucation eg. cur 12541  1273, prev 2541  1273  2914   226
+      }
+      nomatch.curASN = append(nomatch.curASN, s)
+      ss = cur[cur == prev]
+      ss = ss[!is.na(ss)]
+      s = tail(ss, n=1)
+      if (length(s)==0){
+        # the case with total path lost
+        #e.g. cur -3 prev 31669   174  2914   226 or the other way around
+         s = -4 # for total loss
+      }else if(is.na(s)){
+        print('NA')
+        print(cur)
+        print(prev)
+      }
+      nomatch.prevASN = append(nomatch.prevASN, s)
+    }
+  }
+  if(length(mIdx)>0){
+    IDpchg = which(stat.asap[pb,]$disChange[[1]]>0)
+    IDpchg.nm = IDpchg[mIdx]
+    for(pid in IDpchg.nm){
+      match.pb = append(match.pb, pb)
+      cur = temp[[pb]]$as_path_ap[[pid]]
+      prev = temp[[pb]]$as_path_ap[[pid-1]]
+      s = cur[cur!=prev][1]
+      if(is.na(s)){
+        s= -1 # -1 for trucation eg. cur 12541  1273, prev 2541  1273  2914   226
+      }
+      match.curASN = append(match.curASN, s)
+      ss = cur[cur == prev]
+      ss = ss[!is.na(ss)]
+      s = tail(ss, n=1)
+      if (length(s)==0){
+        # the case with total path lost
+        #e.g. cur -3 prev 31669   174  2914   226 or the other way around
+        s = -4 # for total loss
+      }else if(is.na(s)){
+        print('NA')
+        print(cur)
+        print(prev)
+      }
+      match.prevASN = append(match.prevASN, s)
+    }
+  }
+}
+df.nomatch = data.frame(pb = nomatch.pb,  curASN = nomatch.curASN, prevASN = nomatch.prevASN)
+df.match = data.frame(pb = match.pb,  curASN = match.curASN, prevASN = match.prevASN)
+
+# number of non-matching AS path change to each probe
+df.tab = data.frame(table(as.character(nomatch.pb)), stringsAsFactors = F)
+names(df.tab)[1] <- 'pb'
+
+# probes with few such changes
+p = df.tab[df.tab$Freq<=3,]$pb
+fewNomatch = df.nomatch[df.nomatch$pb %in% p,]
+nrow(fewNomatch)
+# 41 entries, only 6 of them are due to AS path changes, others -3, -1
+#c('383', '384', '960', '961', '966', '967')
+
+# probes with a lot non matching changes
+p = df.tab[df.tab$Freq>3,]$pb
+manyNomatch = df.nomatch[df.nomatch$pb %in% p,]
+nrow(manyNomatch)
+#928 entries
+df.tab[df.tab$Freq>3,]
+table(manyNomatch$prevASN)
+table(manyNomatch[manyNomatch$prev == 226,]$curASN)
+
+# number of matching AS path change to each probe
+df.Mtab = data.frame(table(as.character(match.pb)), stringsAsFactors = F)
+names(df.Mtab)[1] <- 'pb'
+table(df.match$prevASN)
+table(df.match$curASN)
+
+# how RTT change, increasing or lower, when the 90 matched changes happen
+qpb = '23428'
+plot(tstp[1100:1300], pbRTT[qpb,]$ts[1100:1300], type='l')
+abline(v=time.trace[qpb,][[1]][which(stat.asap[qpb,]$disChange[[1]]>0)], col='red')
+abline(v=tstp[cpts(chptsMeanVar[[qpb]])], lty=2)
